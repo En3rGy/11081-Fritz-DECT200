@@ -1,0 +1,162 @@
+<body>
+<h1>Fritz DECT200 (11081)</h1>
+<p>Dieser Baustein liest aktuellen Stomverbrauch in mW,
+Zählerstand des DECT200 in Wh und die gemessene Temperatur
+(korrigiert um den eingestellten Offset). Mehrere Bausteine
+können als Kaskade verknüpft werden, so dass nur eine Webabfrage
+nötig wird. Hierzu wird einfach A6 des Vorgängerbausteins mit
+E1 des Nachfolgebausteins verknüpft</p>
+
+<table>
+ <tr>
+  <td>Baustein Id:</td>
+  <td>11081</td>
+ </tr>
+ <tr>
+  <td>Kategorie:</td>
+  <td>Datenaustausch</td>
+ </tr>
+  <tr>
+  <td>Gültigkeit der Hilfe:</td>
+  <td>Bausteinversion 0.19</td>
+ </tr>
+  <tr>
+  <td>Getestet mit HS FW:</td>
+  <td>4.10</td>
+ </tr> 
+</table>
+
+
+<h2 >Eingänge</h2>
+
+<table border=1>
+ <tr>
+  <td><b>Eingang</b></td>
+  <td><b>Initwert</b></td>
+  <td><b>Beschreibung</b></td>
+ </tr>
+ <tr>
+  <td>XML</td>
+  <td></td>
+  <td>Kaskadeneingang</td>
+ </tr>
+ <tr>
+  <td>SID</td>
+  <td></td>
+  <td></td>
+ </tr>
+ <tr>
+  <td>Fritzbox IP</td>
+  <td></td>
+  <td>IP der FritzBox</td>
+ </tr>
+ <tr>
+  <td>User@Passwort</td>
+  <td></td>
+  <td>User@Passwort des zu verwendenden FritzBox-Nutzers</td>
+ </tr>
+ <tr>
+  <td>AIN</td>
+  <td></td>
+  <td>AIN der auszulesenden FritzDECT200</td>
+ </tr>
+ <tr>
+  <td>Ein/Aus</td>
+  <td>0</td>
+  <td>Ein/Ausschalten der FritzDECT 200</td>
+ </tr>
+ <tr>
+  <td>Timeout SID</td>
+  <td>480</td>
+  <td></td>
+ </tr>
+ <tr>
+  <td>Trigger</td>
+  <td>0</td>
+  <td>Trigger, um Baustein auszulösen, bspw. mit einem Telegrammgenerator belegen</td>
+ </tr>
+</table>
+
+<h2>Ausgänge</h2>
+
+<table border=1>
+ <tr>
+  <td><b>Ausgang</b></td>
+  <td><b>Initwert</b></td>
+  <td><b>Beschreibung</b></td>
+ </tr>
+ <tr>
+  <td>RM Ein/Aus</td>
+  <td>0</td>
+  <td>Ein/Aus Status der DECT200</td>
+ </tr>
+ <tr>
+  <td>RM Akt. mW</td>
+  <td>0</td>
+  <td>Gelesene mW</td>
+ </tr>
+  <tr>
+  <td>RM Akt. Zaehlerst. Wh</td>
+  <td>0</td>
+  <td>Gelesene Wh</td>
+ </tr>
+  <tr>
+  <td>RM Akt. Temp.</td>
+  <td>0</td>
+  <td>Gelesene °C, um Offset korrigiert</td>
+ </tr>
+  <tr>
+  <td>SID</td>
+  <td></td>
+  <td>Aktuelle SID (Nur beim 1. Baustein einer Kaskade!)</td>
+ </tr>
+  <tr>
+  <td>XML</td>
+  <td></td>
+  <td>Empfangene XML Datei zu allen Smart Home Geräten der FritzBox</td>
+ </tr>
+</table>
+
+<h2>Sonstiges</h2>
+
+<table>
+ <tr>
+  <td>Neuberechnung beim Start</td>
+  <td>Nein</td>
+ </tr>
+ <tr>
+  <td>Baustein ist remanent</td>
+  <td>Nein</td>
+ </tr>
+</table>
+
+<h3>Change Log</h3>
+<ul>
+  <li>v0.19
+    <ul>
+	  <li>Impr.: Ausgaben auf Debug-Seite</li>
+	</ul>
+  </li>
+  <li>v0.18
+    <ul>
+	  <li>Bugfix: XML Daten wurden nicht auf Ausgang "XML" weitergereicht.</li>
+	</ul>
+  </li>
+</ul>
+
+<h3>Open Issues / Known Bugs</h3>
+<ul>
+<li>Eingang Timeout SID aktuell ohne Funktion</li>
+</ul>
+
+<h3>Code</h3>
+
+Der Python-Code des Bausteins befindet sich in der hslz Datei oder auf <a href="https://github.com/En3rGy/11081-Fritz-DECT200">github</a>.
+
+<h3>Lizenz</h3>
+
+<p>Copyright 2020 T. Paul</p>
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:</p>
+<p>The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.</p>
+<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+</body>
