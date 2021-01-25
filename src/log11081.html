@@ -18,7 +18,7 @@ E1 des Nachfolgebausteins verknüpft</p>
  </tr>
   <tr>
   <td>Gültigkeit der Hilfe:</td>
-  <td>Bausteinversion 0.19</td>
+  <td>Bausteinversion 1.0</td>
  </tr>
   <tr>
   <td>Getestet mit HS FW:</td>
@@ -71,13 +71,14 @@ E1 des Nachfolgebausteins verknüpft</p>
   <td></td>
  </tr>
  <tr>
-  <td>Trigger</td>
+  <td>Intervall</td>
   <td>0</td>
-  <td>Trigger, um Baustein auszulösen, bspw. mit einem Telegrammgenerator belegen</td>
+  <td>Bei einem Wert > 0 wird der Status des DECT200-Geräts alle x Sekunden von der Fritzbox abgefragt.</td></td>
  </tr>
 </table>
 
 <h2>Ausgänge</h2>
+Alle Ausgänge sind sBC / Send by Change ausgeführt.
 
 <table border=1>
  <tr>
@@ -132,6 +133,12 @@ E1 des Nachfolgebausteins verknüpft</p>
 
 <h3>Change Log</h3>
 <ul>
+  <li>v1.0
+    <ul>
+	  <li>Impr.: Trigger Eingang in Intervall-Eingnag geändert (autom. Abruf)</li>
+	  <li>Impr.: Ausgänge als SBC ausgeführt</li>	  
+	</ul>
+  </li>
   <li>v0.19
     <ul>
 	  <li>Impr.: Ausgaben auf Debug-Seite</li>

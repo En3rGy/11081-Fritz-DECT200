@@ -1,9 +1,33 @@
 # coding: UTF-8
+
+# coding: UTF-8
+
+# Copyright 2021 T. Paul</p>
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy 
+# of this software and associated documentation files (the "Software"), to deal 
+# in the Software without restriction, including without limitation the rights 
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
+# copies of the Software, and to permit persons to whom the Software is 
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in 
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+# SOFTWARE.
+
 import re
 import httplib
 import urllib
 import codecs
 import md5
+import threading
 
 ##!!!!##################################################################################################
 #### Own written code can be placed above this commentblock . Do not change or delete commentblock! ####
@@ -23,7 +47,7 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
         self.PIN_I_SAIN=5
         self.PIN_I_BONOFF=6
         self.PIN_I_NSIDTIMEOUT=7
-        self.PIN_I_NTRIGGER=8
+        self.PIN_I_NINTERVALL=8
         self.PIN_O_BRMONOFF=1
         self.PIN_O_NMW=2
         self.PIN_O_NZAEHLERWH=3
@@ -35,6 +59,16 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
 ########################################################################################################
 #### Own written code can be placed after this commentblock . Do not change or delete commentblock! ####
 ###################################################################################################!!!##
+
+    g_out_sbc = {}
+    g_ssid = ""
+
+    def set_output_value_sbc(self, pin, val):
+        if pin in self.g_out_sbc.keys():
+            if self.g_out_sbc[pin] != val:
+                self._set_output_value(pin, val)
+
+        self.g_out_sbc.update({pin: val})
 
     def getSid(self, sUserPw, sIp):
         ## split username from password
@@ -67,6 +101,7 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
         if sSid == '0000000000000000':
             return ""
         else:
+            self.g_ssid = sSid
             return sSid
 
     def setDect200(self, bOnOff, sIp, sAin, sSid):
@@ -76,9 +111,9 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
             sCmd = "setswitchon"
 
         sUrl = str('http://' + sIp +
-                '/webservices/homeautoswitch.lua?ain=' + sAin +
-                '&switchcmd=' + sCmd +
-                '&sid=' + sSid)
+                   '/webservices/homeautoswitch.lua?ain=' + sAin +
+                   '&switchcmd=' + sCmd +
+                   '&sid=' + sSid)
         self.DEBUG.set_value("11081 Switch cmd", sUrl)
         resp = urllib.urlopen(sUrl)
         self.DEBUG.set_value("11081 Set switch result", resp.getcode())
@@ -105,16 +140,19 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
 
         if sState != "":
             data["state"] = int(sState)
+            self.set_output_value_sbc(self.PIN_O_BRMONOFF, data["state"])
 
         sPower = re.findall('<device identifier="' + sAin +
                             '" id=.*?>.*?<power>(.*?)</power>', sXml)
         if len(sPower) != 0:
             data["power"] = int(sPower[0])
+            self.set_output_value_sbc(self.PIN_O_NMW, data["power"])
 
         sEnergy = re.findall('<device identifier="' + sAin +
                              '" id=.*?>.*?<energy>(.*?)</energy>', sXml)
         if len(sEnergy) != 0:
             data["energy"] = int(sEnergy[0])
+            self.set_output_value_sbc(self.PIN_O_NZAEHLERWH, data["energy"])
 
         sTemp = re.findall('<device identifier="' + sAin +
                            '" id=.*?>.*?<celsius>(.*?)</celsius>', sXml)
@@ -128,6 +166,7 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
                 nTemp = nTemp + int(sOffset[0])
 
             data["temp"] = nTemp / 10.0
+            self.set_output_value_sbc(self.PIN_O_NTEMP, data["temp"])
 
         return data
 
@@ -137,23 +176,61 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
         response = httpClient.getresponse()
         return response.status
 
+    def trigger(self):
+        # Get SID if not available
+        sSid = self._get_input_value(self.PIN_I_SSID)
+
+        if (not sSid):
+            sSid = self.getSid(self._get_input_value(self.PIN_I_SUSERPW),
+                               self._get_input_value(self.PIN_I_SIP))
+            self.DEBUG.set_value("11081 SID", sSid)
+
+            if sSid == "":
+                self.DEBUG.add_message("11081 Could not receive valid SID")
+            else:
+                self.set_output_value_sbc(self.PIN_O_SSID, sSid)
+
+        # If new XML available or trigger arrived,
+        # get and process new status data
+
+        grXml = self.getXml(self._get_input_value(self.PIN_I_SIP), sSid)
+
+        # Evaluate XML data
+        self.getDect200Status(grXml["data"], self._get_input_value(self.PIN_I_SAIN))
+
+        if grXml["code"] == 200:
+            self.set_output_value_sbc(self.PIN_O_SXML, grXml["data"])
+        else:
+            self.DEBUG.add_message("11081 Error processing XML, code:" +
+                                   str(grXml["code"]))
+            sSid = ""
+
+        interval = self._get_input_value(self.PIN_I_NINTERVALL)
+
+        if (interval > 0):
+            threading.Timer(interval, self.trigger)
+
     def on_init(self):
         self.DEBUG = self.FRAMEWORK.create_debug_section()
-        #self.DEBUG.set_value("11081 XML", "-")
+        # self.DEBUG.set_value("11081 XML", "-")
+
+        if (self._get_input_value(self.PIN_I_NINTERVALL > 0)):
+            self.trigger()
 
     def on_input_value(self, index, value):
 
         sSid = self._get_input_value(self.PIN_I_SSID)
         nLoop = 0
 
+        if (index == self.PIN_I_NINTERVALL) and (value > 0):
+            self.trigger()
+
         # If SID did not work, retry with new SID
         while nLoop < 2:
             nLoop += 1
 
             # Get SID if not available
-            if (((index == self.PIN_I_BONOFF) or
-                 (index == self.PIN_I_NTRIGGER)) and
-                 (not sSid)):
+            if ((index == self.PIN_I_BONOFF) and (not sSid)):
 
                 sSid = self.getSid(self._get_input_value(self.PIN_I_SUSERPW),
                                    self._get_input_value(self.PIN_I_SIP))
@@ -162,61 +239,43 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
                 if sSid == "":
                     self.DEBUG.add_message("11081 Could not receive valid SID")
                 else:
-                    self._set_output_value(self.PIN_O_SSID, sSid)
+                    self.set_output_value_sbc(self.PIN_O_SSID, sSid)
 
             # If new XML available or trigger arrived,
             # get and process new status data
-            if (index == self.PIN_I_SXML) or (index == self.PIN_I_NTRIGGER):
+            if (index == self.PIN_I_SXML):
                 grXml = ""
 
                 if index == self.PIN_I_SXML:
                     grXml = {"code": 200, "data": value}
 
-                if index == self.PIN_I_NTRIGGER:
-                    grXml = self.getXml(self._get_input_value(self.PIN_I_SIP),
-                                        sSid)
-                    #self.DEBUG.set_value("11081 XML", grXml["data"])
-
                 # Evaluate XML data
-                ret = self.getDect200Status(grXml["data"],
-                                            self._get_input_value(self.PIN_I_SAIN))
-
-                if "state" in ret:
-                    self._set_output_value(self.PIN_O_BRMONOFF, ret["state"])
-
-                if "power" in ret:
-                    self._set_output_value(self.PIN_O_NMW, ret["power"])
-
-                if "energy" in ret:
-                    self._set_output_value(self.PIN_O_NZAEHLERWH, ret["energy"])
-
-                if "temp" in ret:
-                    self._set_output_value(self.PIN_O_NTEMP, ret["temp"])
+                self.getDect200Status(grXml["data"], self._get_input_value(self.PIN_I_SAIN))
 
                 if grXml["code"] == 200:
-                    self._set_output_value(self.PIN_O_SXML, grXml["data"])
+                    self.set_output_value_sbc(self.PIN_O_SXML, grXml["data"])
                     return
                 else:
                     self.DEBUG.add_message("11081 Error processing XML, code:" +
-                                           str( grXml["code"]))
+                                           str(grXml["code"]))
                     sSid = ""
 
             # Switch device on or of and report back new status
             if index == self.PIN_I_BONOFF:
-                #self.DEBUG.add_message("11081 Set switch: " + str(self._get_input_value(self.PIN_I_BONOFF)))
+                # self.DEBUG.add_message("11081 Set switch: " + str(self._get_input_value(self.PIN_I_BONOFF)))
 
                 grOn = self.setDect200(self._get_input_value(self.PIN_I_BONOFF),
                                        self._get_input_value(self.PIN_I_SIP),
                                        self._get_input_value(self.PIN_I_SAIN),
                                        sSid)
 
-                self._set_output_value(self.PIN_O_BRMONOFF, grOn["data"])
+                self.set_output_value_sbc(self.PIN_O_BRMONOFF, grOn["data"])
 
                 if grOn["code"] == 200:
                     self.DEBUG.add_message("11081 Switch set successfully.")
                     return
                 else:
                     self.DEBUG.add_message("11081 Error setting switch, code:" +
-                                           str( grOn["code"]))
+                                           str(grOn["code"]))
 
                     sSid = ""
