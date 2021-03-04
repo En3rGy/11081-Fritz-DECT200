@@ -1,10 +1,6 @@
 # Fritz DECT200 (11081)
-Dieser Baustein liest aktuellen Stromverbrauch in mW,
-Zählerstand des DECT200 in Wh und die gemessene Temperatur
-(korrigiert um den eingestellten Offset). Mehrere Bausteine
-können als Kaskade verknüpft werden, so dass nur eine Webabfrage
-nötig wird. Hierzu wird einfach A6 des Vorgängerbausteins mit
-E1 des Nachfolgebausteins verknüpft.
+Dieser Baustein liest den aktuellen Stromverbrauch in mW, den Zählerstand des DECT200 in Wh und die gemessene Temperatur (korrigiert um den eingestellten Offset). Mehrere Bausteine
+können als Kaskade verknüpft werden, so dass nur eine Webabfrage nötig wird. Hierzu wird einfach A6 des Vorgängerbausteins mit E1 des Nachfolgebausteins verknüpft.
 
 ## Installation
 Die .hslz Datei mit dem Gira Experte importieren. Das Logikmodul ist dann in der Rubrik "Datenaustausch" verfügbar.
@@ -45,6 +41,8 @@ Alle Ausgänge sind SBC / Send by Change ausgeführt.
 
 ### Change Log
 
+- v1.1
+	- Fix: SBC
 - v1.0
     - Impr.: Trigger Eingang in Intervall-Eingang geändert (autom. Abruf)
 	- Impr.: Ausgänge als SBC ausgeführt
