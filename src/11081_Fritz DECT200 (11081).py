@@ -62,7 +62,6 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
 
     g_out_sbc = {}
     g_ssid = ""
-
     g_debug_sbc = False
 
     def set_output_value_sbc(self, pin, val):
@@ -218,7 +217,10 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
 
     def on_init(self):
         self.DEBUG = self.FRAMEWORK.create_debug_section()
-        # self.DEBUG.set_value("11081 XML", "-")
+
+        self.g_out_sbc = {}
+        self.g_ssid = ""
+        self.g_debug_sbc = False
 
         if self._get_input_value(self.PIN_I_NINTERVALL > 0):
             self.trigger()

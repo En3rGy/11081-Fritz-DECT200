@@ -97,7 +97,6 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
 
     g_out_sbc = {}
     g_ssid = ""
-
     g_debug_sbc = False
 
     def set_output_value_sbc(self, pin, val):
@@ -253,7 +252,10 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
 
     def on_init(self):
         self.DEBUG = self.FRAMEWORK.create_debug_section()
-        # self.DEBUG.set_value("11081 XML", "-")
+
+        self.g_out_sbc = {}
+        self.g_ssid = ""
+        self.g_debug_sbc = False
 
         if self._get_input_value(self.PIN_I_NINTERVALL > 0):
             self.trigger()
@@ -332,6 +334,7 @@ class TestSequenceFunctions(unittest.TestCase):
     tst = 0
 
     def setUp(self):
+        print("\n###setUp")
         with open("credentials.txt") as f:
             self.cred = json.load(f)
 
@@ -345,17 +348,21 @@ class TestSequenceFunctions(unittest.TestCase):
 
     def test_sbc(self):
         print("\n### test_sbc")
-        tst = FritzDECT200_11081_11081(0)
-        tst.on_init()
-        # tst.set_output_value_sbc(1, 0)
-        tst.set_output_value_sbc(1, 1)
-        self.assertFalse(tst.g_debug_sbc, "a")
-        tst.set_output_value_sbc(1, 1)
-        self.assertTrue(tst.g_debug_sbc, "b")
-        tst.set_output_value_sbc(1, 0)
-        self.assertFalse(tst.g_debug_sbc, "c")
-        tst.set_output_value_sbc(1, 0)
-        self.assertTrue(tst.g_debug_sbc, "d")
+        tst1 = FritzDECT200_11081_11081(1)
+        tst1.on_init()
+        print(tst1.g_out_sbc)
+        tst1.on_init()
+        print(tst1.g_out_sbc)
+        #tst.set_output_value_sbc(1, 0)
+        self.assertFalse(tst1.g_debug_sbc, "a")
+        tst1.set_output_value_sbc(1, 1)
+        self.assertFalse(tst1.g_debug_sbc, "a")
+        tst1.set_output_value_sbc(1, 1)
+        self.assertTrue(tst1.g_debug_sbc, "b")
+        tst1.set_output_value_sbc(1, 0)
+        self.assertFalse(tst1.g_debug_sbc, "c")
+        tst1.set_output_value_sbc(1, 0)
+        self.assertTrue(tst1.g_debug_sbc, "d")
 
     def test_trigger(self):
         print("\n### test_trigger")
