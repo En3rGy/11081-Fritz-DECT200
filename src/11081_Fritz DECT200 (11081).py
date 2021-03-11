@@ -213,7 +213,7 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
         interval = self._get_input_value(self.PIN_I_NINTERVALL)
 
         if interval > 0:
-            threading.Timer(interval, self.trigger)
+            threading.Timer(interval, self.trigger).start()
 
     def on_init(self):
         self.DEBUG = self.FRAMEWORK.create_debug_section()

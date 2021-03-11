@@ -41,6 +41,8 @@ Alle Ausgänge sind SBC / Send by Change ausgeführt.
 
 ### Change Log
 
+- v1.2
+	- Fix: Intervall triggert nicht
 - v1.1
 	- Fix: SBC
 - v1.0

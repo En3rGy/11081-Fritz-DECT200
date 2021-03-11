@@ -1,5 +1,7 @@
 # coding: UTF-8
 
+import time
+
 import unittest
 
 import re
@@ -248,7 +250,7 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
         interval = self._get_input_value(self.PIN_I_NINTERVALL)
 
         if interval > 0:
-            threading.Timer(interval, self.trigger)
+            threading.Timer(interval, self.trigger).start()
 
     def on_init(self):
         self.DEBUG = self.FRAMEWORK.create_debug_section()
@@ -381,6 +383,20 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertEqual(175536, self.tst.debug_output_value[self.tst.PIN_O_NZAEHLERWH])
         self.assertEqual(20.5, self.tst.debug_output_value[self.tst.PIN_O_NTEMP])
         self.assertEqual(xml, self.tst.debug_output_value[self.tst.PIN_O_SXML])
+
+    def test_timer(self):
+        print("\n### test_timer")
+
+        self.tst.debug_input_value[self.tst.PIN_I_NINTERVALL] = 3
+        self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF] = -1
+        self.tst.trigger()
+        self.assertNotEqual(-1, self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF], "a")
+        self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF] = -1
+        self.tst.g_out_sbc = {}
+
+        time.sleep(5)
+
+        self.assertNotEqual(-1, self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF], "b")
 
 
 if __name__ == '__main__':
