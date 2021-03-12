@@ -116,10 +116,15 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
         # split username from password
         pw = user_pw[user_pw.find('@') + 1:]
         user = user_pw.split('@')[0]
+        challenge = ""
 
-        response = urllib.urlopen('http://' + ip + '/login_sid.lua')
-        challenge = response.read()
-        challenge = re.findall('<Challenge>(.*?)</Challenge>', challenge)[0]
+        try:
+            response = urllib.urlopen('http://' + ip + '/login_sid.lua')
+            challenge = response.read()
+            challenge = re.findall('<Challenge>(.*?)</Challenge>', challenge)[0]
+        except Exception as e:
+            self.DEBUG.add_message("'" + str(e) + "' in get_sid()")
+            pass
 
         if len(challenge) == 0:
             return ""
@@ -162,13 +167,17 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
         return {"code": resp.getcode(), "data": resp.read()}
 
     def get_xml(self, sIp, sSid):
-        resp = urllib.urlopen('http://' +
-                              sIp +
-                              '/webservices/homeautoswitch.lua?' +
-                              'switchcmd=getdevicelistinfos' +
-                              '&sid=' + sSid)
-        self.DEBUG.set_value("11081 Get XML result", resp.getcode())
-        return {"code": resp.getcode(), "data": resp.read()}
+        try:
+            resp = urllib.urlopen('http://' +
+                                  sIp +
+                                  '/webservices/homeautoswitch.lua?' +
+                                  'switchcmd=getdevicelistinfos' +
+                                  '&sid=' + sSid)
+            self.DEBUG.add_message("11081 Get XML result: " + str(resp.getcode()))
+            return {"code": resp.getcode(), "data": resp.read()}
+
+        except Exception as e:
+            return {"code": 999, "data": ""}
 
     def get_dect_200_status(self, xml, ain):
         data = {}
@@ -229,6 +238,7 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
 
             if sid == "":
                 self.DEBUG.add_message("11081 Could not receive valid SID")
+                return
             else:
                 self.set_output_value_sbc(self.PIN_O_SSID, sid)
 
@@ -398,6 +408,12 @@ class TestSequenceFunctions(unittest.TestCase):
 
         self.assertNotEqual(-1, self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF], "b")
 
+    def test_no_route(self):
+        print("\n### test_no_route")
+
+        self.tst.debug_input_value[self.tst.PIN_I_SIP] = "192.168.100.100"
+
+        self.tst.trigger()
 
 if __name__ == '__main__':
     unittest.main()
