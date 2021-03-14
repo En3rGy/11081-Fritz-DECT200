@@ -1,0 +1,2 @@
+.txt
+tst_FritzDect.py
