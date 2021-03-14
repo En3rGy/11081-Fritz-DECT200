@@ -236,29 +236,25 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
                                self._get_input_value(self.PIN_I_SIP))
             self.DEBUG.set_value("11081 SID", sid)
 
-            if sid == "":
-                self.DEBUG.add_message("11081 Could not receive valid SID")
-                return
-            else:
-                self.set_output_value_sbc(self.PIN_O_SSID, sid)
-
-        # If new XML available or trigger arrived,
-        # get and process new status data
-
-        xml = self.get_xml(self._get_input_value(self.PIN_I_SIP), sid)
-
-        # Evaluate XML data
-        self.get_dect_200_status(xml["data"], self._get_input_value(self.PIN_I_SAIN))
-
-        if xml["code"] == 200:
-            self.set_output_value_sbc(self.PIN_O_SXML, xml["data"])
+        if sid == "":
+            self.DEBUG.add_message("11081 Could not receive valid SID")
         else:
-            self.DEBUG.add_message("11081 Error processing XML, code:" +
-                                   str(xml["code"]))
-            sid = ""
+            self.set_output_value_sbc(self.PIN_O_SSID, sid)
+
+            # If new XML available or trigger arrived,
+            # get and process new status data
+            xml = self.get_xml(self._get_input_value(self.PIN_I_SIP), sid)
+
+            # Evaluate XML data
+            self.get_dect_200_status(xml["data"], self._get_input_value(self.PIN_I_SAIN))
+
+            if xml["code"] == 200:
+                self.set_output_value_sbc(self.PIN_O_SXML, xml["data"])
+            else:
+                self.DEBUG.add_message("11081 Error processing XML, code:" +
+                                       str(xml["code"]))
 
         interval = self._get_input_value(self.PIN_I_NINTERVALL)
-
         if interval > 0:
             threading.Timer(interval, self.trigger).start()
 
@@ -334,6 +330,8 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
                                            str(res_on["code"]))
 
                     ssid = ""
+            elif index == self.PIN_I_NINTERVALL and value > 0:
+                self.trigger()
 
 
 ############################################

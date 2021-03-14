@@ -16,7 +16,7 @@ Die .hslz Datei mit dem Gira Experte importieren. Das Logikmodul ist dann in der
 | AIN | | AIN der auszulesenden FritzDECT200 |
 | Ein/Aus | 0 | Ein/Ausschalten der FritzDECT 200 |
 | Timeout SID | 480 | |
-| Intervall | 0 | Bei einem Wert > 0 wird der Status des DECT200-Geräts alle x Sekunden von der Fritzbox abgefragt. |
+| Intervall [s] | 0 | Bei einem Wert > 0 wird der Status des DECT200-Geräts alle x Sekunden von der Fritzbox abgefragt. |
 
 
 
@@ -28,9 +28,9 @@ Alle Ausgänge sind SBC / Send by Change ausgeführt.
 | RM Ein/Aus | 0 |Ein/Aus Status der DECT200 |
 | RM Akt. mW | 0 | Gelesene mW |
 | RM Akt. Zaehlerst. Wh | 0 | Gelesene Wh |
-| RM Akt. Temp. | 0 | Gelesene °C, um Offset korrigiert |
-| SID| | Aktuelle SID (Nur beim 1. Baustein einer Kaskade!) |
-| XML| | Empfangene XML Datei zu allen Smart Home Geräten der FritzBox |
+| RM Akt. Temp. °C | 0 | Gelesene °C, um Offset korrigiert |
+| SID | | Aktuelle SID (Nur beim 1. Baustein einer Kaskade!) |
+| XML | | Empfangene XML Datei zu allen Smart Home Geräten der FritzBox |
 
 
 ## Sonstiges

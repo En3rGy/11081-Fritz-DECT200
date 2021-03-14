@@ -34,12 +34,12 @@ import threading
 ########################################################################################################
 ##** Code created by generator - DO NOT CHANGE! **##
 
-class FritzDECT200_11081_11081(hsl20_3.BaseModule):
+class FritzDECT200_11081_11081(hsl20_4.BaseModule):
 
     def __init__(self, homeserver_context):
-        hsl20_3.BaseModule.__init__(self, homeserver_context, "hsl20_3_FritzBox")
+        hsl20_4.BaseModule.__init__(self, homeserver_context, "FritzBox_Dect200")
         self.FRAMEWORK = self._get_framework()
-        self.LOGGER = self._get_logger(hsl20_3.LOGGING_NONE,())
+        self.LOGGER = self._get_logger(hsl20_4.LOGGING_NONE,())
         self.PIN_I_SXML=1
         self.PIN_I_SSID=2
         self.PIN_I_SIP=3
@@ -54,7 +54,6 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
         self.PIN_O_NTEMP=4
         self.PIN_O_SSID=5
         self.PIN_O_SXML=6
-        self.FRAMEWORK._run_in_context_thread(self.on_init)
 
 ########################################################################################################
 #### Own written code can be placed after this commentblock . Do not change or delete commentblock! ####
@@ -199,29 +198,25 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
                                self._get_input_value(self.PIN_I_SIP))
             self.DEBUG.set_value("11081 SID", sid)
 
-            if sid == "":
-                self.DEBUG.add_message("11081 Could not receive valid SID")
-                return
-            else:
-                self.set_output_value_sbc(self.PIN_O_SSID, sid)
-
-        # If new XML available or trigger arrived,
-        # get and process new status data
-
-        xml = self.get_xml(self._get_input_value(self.PIN_I_SIP), sid)
-
-        # Evaluate XML data
-        self.get_dect_200_status(xml["data"], self._get_input_value(self.PIN_I_SAIN))
-
-        if xml["code"] == 200:
-            self.set_output_value_sbc(self.PIN_O_SXML, xml["data"])
+        if sid == "":
+            self.DEBUG.add_message("11081 Could not receive valid SID")
         else:
-            self.DEBUG.add_message("11081 Error processing XML, code:" +
-                                   str(xml["code"]))
-            sid = ""
+            self.set_output_value_sbc(self.PIN_O_SSID, sid)
+
+            # If new XML available or trigger arrived,
+            # get and process new status data
+            xml = self.get_xml(self._get_input_value(self.PIN_I_SIP), sid)
+
+            # Evaluate XML data
+            self.get_dect_200_status(xml["data"], self._get_input_value(self.PIN_I_SAIN))
+
+            if xml["code"] == 200:
+                self.set_output_value_sbc(self.PIN_O_SXML, xml["data"])
+            else:
+                self.DEBUG.add_message("11081 Error processing XML, code:" +
+                                       str(xml["code"]))
 
         interval = self._get_input_value(self.PIN_I_NINTERVALL)
-
         if interval > 0:
             threading.Timer(interval, self.trigger).start()
 
@@ -297,3 +292,5 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
                                            str(res_on["code"]))
 
                     ssid = ""
+            elif index == self.PIN_I_NINTERVALL and value > 0:
+                self.trigger()
