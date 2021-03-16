@@ -43,6 +43,10 @@ class hsl20_3:
             self.debug_output_value[int(pin)] = value
             print "# Out: " + str(value) + " @ pin " + str(pin)
 
+        def _set_input_value(self, pin, value):
+            self.debug_input_value[int(pin)] = value
+            print "# In: " + str(value) + " @ pin " + str(pin)
+
         def _get_input_value(self, pin):
             if pin in self.debug_input_value:
                 return self.debug_input_value[pin]
@@ -265,7 +269,8 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
         self.g_ssid = ""
         self.g_debug_sbc = False
 
-        if self._get_input_value(self.PIN_I_NINTERVALL > 0):
+        interval = self._get_input_value(self.PIN_I_NINTERVALL)
+        if interval > 0:
             self.trigger()
 
     def on_input_value(self, index, value):
@@ -363,10 +368,10 @@ class TestSequenceFunctions(unittest.TestCase):
         print(tst1.g_out_sbc)
         tst1.on_init()
         print(tst1.g_out_sbc)
-        #tst.set_output_value_sbc(1, 0)
-        self.assertFalse(tst1.g_debug_sbc, "a")
+        tst1.set_output_value_sbc(1, 0)
+        self.assertFalse(tst1.g_debug_sbc, "a1")
         tst1.set_output_value_sbc(1, 1)
-        self.assertFalse(tst1.g_debug_sbc, "a")
+        self.assertFalse(tst1.g_debug_sbc, "a2")
         tst1.set_output_value_sbc(1, 1)
         self.assertTrue(tst1.g_debug_sbc, "b")
         tst1.set_output_value_sbc(1, 0)
@@ -395,7 +400,7 @@ class TestSequenceFunctions(unittest.TestCase):
     def test_timer(self):
         print("\n### test_timer")
 
-        self.tst.debug_input_value[self.tst.PIN_I_NINTERVALL] = 3
+        self.tst._set_input_value(self.tst.PIN_I_NINTERVALL, 3)
         self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF] = -1
         self.tst.trigger()
         self.assertNotEqual(-1, self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF], "a")
@@ -412,6 +417,22 @@ class TestSequenceFunctions(unittest.TestCase):
         self.tst.debug_input_value[self.tst.PIN_I_SIP] = "192.168.100.100"
 
         self.tst.trigger()
+
+    def test_interval(self):
+        print("\n### test_interval")
+
+        self.tst._set_input_value(self.tst.PIN_I_NINTERVALL, 3)
+        self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF] = -1
+        self.assertEqual(-1, self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF], "a")
+        self.tst.on_init()
+
+        self.assertNotEqual(-1, self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF], "b")
+        self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF] = -1
+        self.assertEqual(-1, self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF], "b1")
+
+        time.sleep(5)
+
+        self.assertNotEqual(-1, self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF], "c")
 
 if __name__ == '__main__':
     unittest.main()

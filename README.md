@@ -44,6 +44,8 @@ Alle Ausgänge sind SBC / Send by Change ausgeführt.
 
 ### Change Log
 
+- v1.4 & v1.5
+    - Fix: Keine Reaktion auf Intervall-Vorgabe
 - v1.3
     - Impr.: Exception Handling
 	- Impr.: Impr. logging (msg bei xml abruf)

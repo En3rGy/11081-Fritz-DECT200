@@ -227,7 +227,8 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
         self.g_ssid = ""
         self.g_debug_sbc = False
 
-        if self._get_input_value(self.PIN_I_NINTERVALL > 0):
+        interval = self._get_input_value(self.PIN_I_NINTERVALL)
+        if interval > 0:
             self.trigger()
 
     def on_input_value(self, index, value):
