@@ -44,6 +44,8 @@ Alle Ausgänge sind SBC / Send by Change ausgeführt.
 
 ### Change Log
 
+- v1.6
+	- IMpr. Logging mit AIN-Angabe
 - v1.4 & v1.5
     - Fix: Keine Reaktion auf Intervall-Vorgabe
 - v1.3
