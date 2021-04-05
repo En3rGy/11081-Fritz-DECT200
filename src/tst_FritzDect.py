@@ -193,23 +193,29 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
         else:
             state = state[0]
 
-        try:
-            if state != "":
-                data["state"] = int(state)
-                self.set_output_value_sbc(self.PIN_O_BRMONOFF, bool(data["state"]))
+        if state != "":
+            data["state"] = int(state)
+            self.set_output_value_sbc(self.PIN_O_BRMONOFF, bool(data["state"]))
 
+        try:
             power = re.findall('<device identifier="' + ain +
                                '" id=.*?>.*?<power>(.*?)</power>', xml)
             if len(power) > 0:
                 data["power"] = int(power[0])
                 self.set_output_value_sbc(self.PIN_O_NMW, float(data["power"]))
+        except Exception as e:
+            self.DEBUG.add_message(str(self._get_input_value(self.PIN_I_SAIN)) + ": '" + str(e) + "' in 'power' in get_dect_200_status()")
 
+        try:
             energy = re.findall('<device identifier="' + ain +
                                 '" id=.*?>.*?<energy>(.*?)</energy>', xml)
             if len(energy) > 0:
                 data["energy"] = int(energy[0])
                 self.set_output_value_sbc(self.PIN_O_NZAEHLERWH, float(data["energy"]))
+        except Exception as e:
+            self.DEBUG.add_message(str(self._get_input_value(self.PIN_I_SAIN)) + ": '" + str(e) + "' in 'energy' in get_dect_200_status()")
 
+        try:
             temp = re.findall('<device identifier="' + ain +
                               '" id=.*?>.*?<celsius>(.*?)</celsius>', xml)
 
@@ -224,10 +230,10 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
                 data["temp"] = temp / 10.0
                 self.set_output_value_sbc(self.PIN_O_NTEMP, float(data["temp"]))
 
-            self.DEBUG.add_message(str(self._get_input_value(self.PIN_I_SAIN)) + ": XML processed successfully")
-
         except Exception as e:
-            self.DEBUG.add_message(str(self._get_input_value(self.PIN_I_SAIN)) + ": '" + str(e) + "' in get_dect_200_status()")
+            self.DEBUG.add_message(str(self._get_input_value(self.PIN_I_SAIN)) + ": '" + str(e) + "' in 'temp' in get_dect_200_status()")
+
+        self.DEBUG.add_message(str(self._get_input_value(self.PIN_I_SAIN)) + ": XML processed successfully")
 
         return data
 

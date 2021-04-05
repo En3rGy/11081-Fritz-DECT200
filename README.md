@@ -44,10 +44,12 @@ Alle Ausgänge sind SBC / Send by Change ausgeführt.
 
 ### Change Log
 
+- v1.7
+    - Impr.: [#4](https://github.com/En3rGy/11081-Fritz-DECT200/issues/4) Try-catch für einzelne Datenpunkte, damit im Fehlerfall die anderen noch verarbeitet werden können
 - v1.6
-	- IMpr. Logging mit AIN-Angabe
+	- Impr.: [#3](https://github.com/En3rGy/11081-Fritz-DECT200/issues/3) Logging mit AIN-Angabe
 - v1.4 & v1.5
-    - Fix: Keine Reaktion auf Intervall-Vorgabe
+    - Fix: [#1](https://github.com/En3rGy/11081-Fritz-DECT200/issues/1) Keine Reaktion auf Intervall-Vorgabe
 - v1.3
     - Impr.: Exception Handling
 	- Impr.: Impr. logging (msg bei xml abruf)
