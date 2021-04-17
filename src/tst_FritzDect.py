@@ -116,7 +116,9 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
         self.g_out_sbc[pin] = val
         self.g_debug_sbc = False
 
-    def get_sid(self, user_pw, ip):
+    def get_sid(self):
+        user_pw = self._get_input_value(self.PIN_I_SUSERPW)
+        ip = self._get_input_value(self.PIN_I_SIP)
         # split username from password
         pw = user_pw[user_pw.find('@') + 1:]
         user = user_pw.split('@')[0]
@@ -131,7 +133,9 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
             pass
 
         if len(challenge) == 0:
-            return ""
+            self.g_ssid = "0000000000000000"
+            self._set_output_value(self.PIN_O_SSID, self.g_ssid)
+            return False
 
         challenge_resp = codecs.utf_16_le_encode(unicode('%s-%s' %
                                                          (challenge, pw)))[0]
@@ -145,15 +149,21 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
         sid = re.findall('<SID>(.*?)</SID>', sid)
 
         if len(sid) == 0:
-            return ""
+            self.g_ssid = "0000000000000000"
+            self._set_output_value(self.PIN_O_SSID, self.g_ssid)
+            return False
 
         sid = sid[0]
 
         if sid == '0000000000000000':
-            return ""
+            self.g_ssid = "0000000000000000"
+            self._set_output_value(self.PIN_O_SSID, self.g_ssid)
+            return False
         else:
             self.g_ssid = sid
-            return sid
+            self._set_output_value(self.PIN_O_SSID, self.g_ssid)
+            self.DEBUG.set_value(self._get_input_value(self.PIN_I_SAIN) + ": SID", sid)
+            return True
 
     def set_dect_200(self, on_off, ip, ain, sid):
         # Dect200 #1 on/off
@@ -183,8 +193,9 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
         except Exception as e:
             return {"code": 999, "data": ""}
 
-    def get_dect_200_status(self, xml, ain):
+    def get_dect_200_status(self, xml):
         data = {}
+        ain = self._get_input_value(self.PIN_I_SAIN)
         state = re.findall('<device identifier="' + ain +
                            '" id=.*?>.*?<state>(.*?)</state>', xml)
 
@@ -204,7 +215,7 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
                 data["power"] = int(power[0])
                 self.set_output_value_sbc(self.PIN_O_NMW, float(data["power"]))
         except Exception as e:
-            self.DEBUG.add_message(str(self._get_input_value(self.PIN_I_SAIN)) + ": '" + str(e) + "' in 'power' in get_dect_200_status()")
+            self.DEBUG.add_message(str(self._get_input_value(self.PIN_I_SAIN)) + ": '" + str(power[0]) + "' in power in get_dect_200_status()")
 
         try:
             energy = re.findall('<device identifier="' + ain +
@@ -213,7 +224,7 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
                 data["energy"] = int(energy[0])
                 self.set_output_value_sbc(self.PIN_O_NZAEHLERWH, float(data["energy"]))
         except Exception as e:
-            self.DEBUG.add_message(str(self._get_input_value(self.PIN_I_SAIN)) + ": '" + str(e) + "' in 'energy' in get_dect_200_status()")
+            self.DEBUG.add_message(str(self._get_input_value(self.PIN_I_SAIN)) + ": '" + str(energy[0]) + "' in energy in get_dect_200_status()")
 
         try:
             temp = re.findall('<device identifier="' + ain +
@@ -231,7 +242,7 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
                 self.set_output_value_sbc(self.PIN_O_NTEMP, float(data["temp"]))
 
         except Exception as e:
-            self.DEBUG.add_message(str(self._get_input_value(self.PIN_I_SAIN)) + ": '" + str(e) + "' in 'temp' in get_dect_200_status()")
+            self.DEBUG.add_message(str(self._get_input_value(self.PIN_I_SAIN)) + ": Error converting '" + str(temp[0]) + "' in temp in get_dect_200_status()")
 
         self.DEBUG.add_message(str(self._get_input_value(self.PIN_I_SAIN)) + ": XML processed successfully")
 
@@ -247,28 +258,28 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
         # Get SID if not available
         sid = self._get_input_value(self.PIN_I_SSID)
 
-        if not sid:
-            sid = self.get_sid(self._get_input_value(self.PIN_I_SUSERPW),
-                               self._get_input_value(self.PIN_I_SIP))
-            self.DEBUG.set_value(self._get_input_value(self.PIN_I_SAIN) + ": SID", sid)
+        if not sid or sid == "0000000000000000":
+            if self.get_sid():
+                sid = self.g_ssid
 
-        if sid == "":
-            self.DEBUG.add_message(self._get_input_value(self.PIN_I_SAIN) + ": Could not receive valid SID")
-        else:
-            self.set_output_value_sbc(self.PIN_O_SSID, sid)
+                # If new XML available or trigger arrived,
+                # get and process new status data
+                xml = self.get_xml(self._get_input_value(self.PIN_I_SIP), sid)
 
-            # If new XML available or trigger arrived,
-            # get and process new status data
-            xml = self.get_xml(self._get_input_value(self.PIN_I_SIP), sid)
+                # Evaluate XML data
+                self.get_dect_200_status(xml["data"])
 
-            # Evaluate XML data
-            self.get_dect_200_status(xml["data"], self._get_input_value(self.PIN_I_SAIN))
+                if xml["code"] == 200:
+                    self.set_output_value_sbc(self.PIN_O_SXML, xml["data"])
+                elif xml["code"] == 403 or xml["code"] == 999:
+                    self.g_ssid = "0000000000000000"
+                    # self._set_output_value(self.PIN_O_SXML, "")
+                else:
+                    self.DEBUG.add_message(self._get_input_value(self.PIN_I_SAIN) + ": Error processing XML, code:" +
+                                           str(xml["code"]))
 
-            if xml["code"] == 200:
-                self.set_output_value_sbc(self.PIN_O_SXML, xml["data"])
             else:
-                self.DEBUG.add_message(self._get_input_value(self.PIN_I_SAIN) + ": Error processing XML, code:" +
-                                       str(xml["code"]))
+                self.DEBUG.add_message(self._get_input_value(self.PIN_I_SAIN) + ": Could not receive valid SID")
 
         interval = self._get_input_value(self.PIN_I_NINTERVALL)
         if interval > 0:
@@ -278,7 +289,7 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
         self.DEBUG = self.FRAMEWORK.create_debug_section()
 
         self.g_out_sbc = {}
-        self.g_ssid = ""
+        self.g_ssid = "0000000000000000"
         self.g_debug_sbc = False
 
         interval = self._get_input_value(self.PIN_I_NINTERVALL)
@@ -287,7 +298,10 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
 
     def on_input_value(self, index, value):
 
-        ssid = self._get_input_value(self.PIN_I_SSID)
+        if index == self.PIN_I_SSID:
+            self.g_ssid = value
+
+        ssid = self.g_ssid
         loop = 0
 
         if (index == self.PIN_I_NINTERVALL) and (value > 0):
@@ -297,45 +311,18 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
         while loop < 2:
             loop += 1
 
-            # Get SID if not available
-            if (index == self.PIN_I_BONOFF) and (not ssid):
-
-                ssid = self.get_sid(self._get_input_value(self.PIN_I_SUSERPW),
-                                    self._get_input_value(self.PIN_I_SIP))
-                self.DEBUG.set_value(str(self._get_input_value(self.PIN_I_SAIN)) + ": SID", ssid)
-
-                if ssid == "":
-                    self.DEBUG.add_message(str(self._get_input_value(self.PIN_I_SAIN)) + ": Could not receive valid SID")
-                else:
-                    self.set_output_value_sbc(self.PIN_O_SSID, ssid)
-
-            # If new XML available or trigger arrived,
-            # get and process new status data
-            elif index == self.PIN_I_SXML:
-                xml = ""
-
-                if index == self.PIN_I_SXML:
-                    xml = {"code": 200, "data": value}
-
-                # Evaluate XML data
-                self.get_dect_200_status(xml["data"], self._get_input_value(self.PIN_I_SAIN))
-
-                if xml["code"] == 200:
-                    self._set_output_value(self.PIN_O_SXML, xml["data"])
-                    return
-                else:
-                    self.DEBUG.add_message(str(self._get_input_value(self.PIN_I_SAIN)) + ": Error processing XML, code:" +
-                                           str(xml["code"]))
-                    ssid = ""
+            # Get SSID if not available
+            if index == self.PIN_I_BONOFF and (not ssid or ssid == "0000000000000000"):
+                if not self.get_sid():
+                    continue
 
             # Switch device on or of and report back new status
-            elif index == self.PIN_I_BONOFF:
-                # self.DEBUG.add_message(self._get_input_value(self.PIN_I_SAIN) + ": Set switch: " + str(self._get_input_value(self.PIN_I_BONOFF)))
+            if index == self.PIN_I_BONOFF:
 
                 res_on = self.set_dect_200(self._get_input_value(self.PIN_I_BONOFF),
                                            self._get_input_value(self.PIN_I_SIP),
                                            self._get_input_value(self.PIN_I_SAIN),
-                                           ssid)
+                                           self.g_ssid)
 
                 self.set_output_value_sbc(self.PIN_O_BRMONOFF, bool(res_on["data"]))
 
@@ -346,7 +333,27 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
                     self.DEBUG.add_message(str(self._get_input_value(self.PIN_I_SAIN)) + ": Error setting switch, code:" +
                                            str(res_on["code"]))
 
+                    self.g_ssid = "0000000000000000"
+
+            # If new XML available or trigger arrived,
+            # get and process new status data
+            elif index == self.PIN_I_SXML:
+                xml = ""
+
+                if index == self.PIN_I_SXML:
+                    xml = {"code": 200, "data": value}
+
+                # Evaluate XML data
+                self.get_dect_200_status(xml["data"])
+
+                if xml["code"] == 200:
+                    self._set_output_value(self.PIN_O_SXML, xml["data"])
+                    return
+                else:
+                    self.DEBUG.add_message(str(self._get_input_value(self.PIN_I_SAIN)) + ": Error processing XML, code:" +
+                                           str(xml["code"]))
                     ssid = ""
+
             elif index == self.PIN_I_NINTERVALL and value > 0:
                 self.trigger()
 
@@ -446,6 +453,12 @@ class TestSequenceFunctions(unittest.TestCase):
         time.sleep(5)
 
         self.assertNotEqual(-1, self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF], "c")
+
+    def test_sid(self):
+        print("\n### test_sid")
+        self.tst.get_sid()
+        self.assertTrue(self.tst.g_ssid)
+        self.assertNotEqual("0000000000000000", self.tst.g_ssid)
 
 if __name__ == '__main__':
     unittest.main()
