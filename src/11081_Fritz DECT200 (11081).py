@@ -124,19 +124,35 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
             return True
 
     def set_dect_200(self, on_off, ip, ain, sid):
-        # Dect200 #1 on/off
-        cmd = 'setswitchoff'
-        if bool(on_off) is True:
-            cmd = "setswitchon"
+        code = 0
+        data = ""
+        for x in range(0, 2):
+            if not sid or sid == "0000000000000000":
+                if self.get_sid():
+                    sid = self.g_ssid
 
-        url = str('http://' + ip +
-                   '/webservices/homeautoswitch.lua?ain=' + ain +
-                   '&switchcmd=' + cmd +
-                   '&sid=' + sid)
-        self.DEBUG.set_value(self._get_input_value(self.PIN_I_SAIN) + ": Switch cmd", url)
-        resp = urllib.urlopen(url)
-        self.DEBUG.set_value(self._get_input_value(self.PIN_I_SAIN) + ": Set switch result", resp.getcode())
-        return {"code": resp.getcode(), "data": resp.read()}
+            # Dect200 #1 on/off
+            cmd = 'setswitchoff'
+            if bool(on_off) is True:
+                cmd = "setswitchon"
+
+            url = str('http://' + ip +
+                       '/webservices/homeautoswitch.lua?ain=' + ain + '&switchcmd=' + cmd + '&sid=' + sid)
+            resp = urllib.urlopen(url)
+            code = resp.getcode()
+            data = resp.read()
+            if code == 200:
+                self.DEBUG.add_message(str(self._get_input_value(self.PIN_I_SAIN)) + ": Switch set successfully.")
+                return {"code": code, "data": data}
+
+            elif code == 403:
+                print("1st try failed in set_dect_200 with 403")
+                sid = "0000000000000000"
+
+        self.DEBUG.add_message(str(self._get_input_value(self.PIN_I_SAIN)) + ": Error setting switch, code:" +
+                               str(code))
+
+        return {"code": code, "data": data}
 
     def get_xml(self, sIp, sSid):
         try:
@@ -256,61 +272,35 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
 
     def on_input_value(self, index, value):
 
+        ssid = self.g_ssid
+
         if index == self.PIN_I_SSID:
             self.g_ssid = value
 
-        ssid = self.g_ssid
-        loop = 0
-
-        if (index == self.PIN_I_NINTERVALL) and (value > 0):
+        elif (index == self.PIN_I_NINTERVALL) and (value > 0):
             self.trigger()
 
-        # If SID did not work, retry with new SID
-        while loop < 2:
-            loop += 1
+        # Switch device on or of and report back new status
+        elif index == self.PIN_I_BONOFF:
 
-            # Get SSID if not available
-            if index == self.PIN_I_BONOFF and (not ssid or ssid == "0000000000000000"):
-                if not self.get_sid():
-                    continue
+            res_on = self.set_dect_200(self._get_input_value(self.PIN_I_BONOFF),
+                                       self._get_input_value(self.PIN_I_SIP),
+                                       self._get_input_value(self.PIN_I_SAIN),
+                                       self.g_ssid)
 
-            # Switch device on or of and report back new status
-            if index == self.PIN_I_BONOFF:
+            self.set_output_value_sbc(self.PIN_O_BRMONOFF, bool(res_on["data"]))
 
-                res_on = self.set_dect_200(self._get_input_value(self.PIN_I_BONOFF),
-                                           self._get_input_value(self.PIN_I_SIP),
-                                           self._get_input_value(self.PIN_I_SAIN),
-                                           self.g_ssid)
+        # If new XML available or trigger arrived,
+        # get and process new status data
+        elif index == self.PIN_I_SXML:
+            xml = ""
 
-                self.set_output_value_sbc(self.PIN_O_BRMONOFF, bool(res_on["data"]))
+            if index == self.PIN_I_SXML:
+                xml = {"code": 200, "data": value}
 
-                if res_on["code"] == 200:
-                    self.DEBUG.add_message(str(self._get_input_value(self.PIN_I_SAIN)) + ": Switch set successfully.")
-                    return
-                else:
-                    self.DEBUG.add_message(str(self._get_input_value(self.PIN_I_SAIN)) + ": Error setting switch, code:" +
-                                           str(res_on["code"]))
+            # Evaluate XML data
+            self.get_dect_200_status(xml["data"])
+            self._set_output_value(self.PIN_O_SXML, xml["data"])
 
-                    self.g_ssid = "0000000000000000"
-
-            # If new XML available or trigger arrived,
-            # get and process new status data
-            elif index == self.PIN_I_SXML:
-                xml = ""
-
-                if index == self.PIN_I_SXML:
-                    xml = {"code": 200, "data": value}
-
-                # Evaluate XML data
-                self.get_dect_200_status(xml["data"])
-
-                if xml["code"] == 200:
-                    self._set_output_value(self.PIN_O_SXML, xml["data"])
-                    return
-                else:
-                    self.DEBUG.add_message(str(self._get_input_value(self.PIN_I_SAIN)) + ": Error processing XML, code:" +
-                                           str(xml["code"]))
-                    ssid = ""
-
-            elif index == self.PIN_I_NINTERVALL and value > 0:
-                self.trigger()
+        elif index == self.PIN_I_NINTERVALL and value > 0:
+            self.trigger()
