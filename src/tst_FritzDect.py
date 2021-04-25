@@ -285,6 +285,7 @@ class FritzDECT200_11081_11081(hsl20_3.BaseModule):
                 # Evaluate XML data
                 self.get_dect_200_status(xml["data"])
                 self.set_output_value_sbc(self.PIN_O_SXML, xml["data"])
+                self.DEBUG.add_message(self._get_input_value(self.PIN_I_SAIN) + ": XML received")
                 break
             elif xml["code"] == 403 or xml["code"] == 999:
                 self.g_ssid = "0000000000000000"
@@ -407,12 +408,11 @@ class TestSequenceFunctions(unittest.TestCase):
 
     def test_timer(self):
         print("\n### test_timer")
-
+        self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF] = -1
+        # self.tst.trigger()
+        self.assertEqual(-1, self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF], "a")
         self.tst._set_input_value(self.tst.PIN_I_NINTERVALL, 3)
-        self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF] = -1
-        self.tst.trigger()
-        self.assertNotEqual(-1, self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF], "a")
-        self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF] = -1
+        #self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF] = -1
         self.tst.g_out_sbc = {}
 
         time.sleep(5)
@@ -437,18 +437,26 @@ class TestSequenceFunctions(unittest.TestCase):
     def test_interval(self):
         print("\n### test_interval")
 
-        self.tst._set_input_value(self.tst.PIN_I_NINTERVALL, 3)
-        self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF] = -1
-        self.assertEqual(-1, self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF], "a")
+        self.tst._set_input_value(self.tst.PIN_I_NINTERVALL, 0)
         self.tst.on_init()
+        print("Step 1")
+        self.tst.g_out_sbc[self.tst.PIN_O_SXML] = ""
+        self.tst.debug_input_value[self.tst.PIN_I_NINTERVALL] = 3
+        self.tst.on_input_value(self.tst.PIN_I_NINTERVALL, 3)
+        self.assertNotEqual("", self.tst.g_out_sbc[self.tst.PIN_O_SXML], "a")
 
-        self.assertNotEqual(-1, self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF], "b")
-        self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF] = -1
-        self.assertEqual(-1, self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF], "b1")
+        print("Step 2")
+        self.tst.g_out_sbc[self.tst.PIN_O_SXML] = ""
+        time.sleep(4)
+        self.assertNotEqual("", self.tst.g_out_sbc[self.tst.PIN_O_SXML], "b")
+        self.tst.g_out_sbc[self.tst.PIN_O_SXML] = ""
 
-        time.sleep(5)
+        print("Step 3")
+        self.tst.g_out_sbc[self.tst.PIN_O_SXML] = ""
+        time.sleep(4)
+        self.assertNotEqual("", self.tst.g_out_sbc[self.tst.PIN_O_SXML], "c")
+        self.tst.g_out_sbc[self.tst.PIN_O_SXML] = ""
 
-        self.assertNotEqual(-1, self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF], "c")
 
     def test_sid(self):
         print("\n### test_sid")

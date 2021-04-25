@@ -232,28 +232,27 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
         # Get SID if not available
         sid = self._get_input_value(self.PIN_I_SSID)
 
-        if not sid or sid == "0000000000000000":
-            if self.get_sid():
-                sid = self.g_ssid
+        for x in range(0, 2):
+            if not sid or sid == "0000000000000000":
+                if self.get_sid():
+                    sid = self.g_ssid
 
-                # If new XML available or trigger arrived,
-                # get and process new status data
-                xml = self.get_xml(self._get_input_value(self.PIN_I_SIP), sid)
+            xml = self.get_xml(self._get_input_value(self.PIN_I_SIP), sid)
 
+            if xml["code"] == 200:
                 # Evaluate XML data
                 self.get_dect_200_status(xml["data"])
-
-                if xml["code"] == 200:
-                    self.set_output_value_sbc(self.PIN_O_SXML, xml["data"])
-                elif xml["code"] == 403 or xml["code"] == 999:
-                    self.g_ssid = "0000000000000000"
-                    # self._set_output_value(self.PIN_O_SXML, "")
-                else:
-                    self.DEBUG.add_message(self._get_input_value(self.PIN_I_SAIN) + ": Error processing XML, code:" +
-                                           str(xml["code"]))
-
+                self.set_output_value_sbc(self.PIN_O_SXML, xml["data"])
+                self.DEBUG.add_message(self._get_input_value(self.PIN_I_SAIN) + ": XML received")
+                break
+            elif xml["code"] == 403 or xml["code"] == 999:
+                self.g_ssid = "0000000000000000"
+                if x == 1:
+                    self.DEBUG.add_message(self._get_input_value(self.PIN_I_SAIN) + ": Could not receive valid SID")
             else:
-                self.DEBUG.add_message(self._get_input_value(self.PIN_I_SAIN) + ": Could not receive valid SID")
+                if x == 1:
+                    self.DEBUG.add_message(self._get_input_value(self.PIN_I_SAIN) + ": Error processing XML, code:" +
+                                       str(xml["code"]))
 
         interval = self._get_input_value(self.PIN_I_NINTERVALL)
         if interval > 0:
