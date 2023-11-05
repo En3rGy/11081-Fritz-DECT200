@@ -1,6 +1,6 @@
 # Fritz DECT200 (11081)
 Dieser Baustein liest den aktuellen Stromverbrauch in mW, den Zählerstand des DECT200 in Wh und die gemessene Temperatur (korrigiert um den eingestellten Offset). Mehrere Bausteine
-können als Kaskade verknüpft werden, so dass nur eine Webabfrage nötig wird. Hierzu wird einfach A6 des Vorgängerbausteins mit E1 des Nachfolgebausteins verknüpft.
+können als Kaskade verknüpft werden, sodass nur eine Webabfrage nötig wird. Hierzu wird einfach A6 des Vorgängerbausteins mit E1 des Nachfolgebausteins verknüpft.
 
 ## Voraussetzung
 - HS Firmware 4.11 / HSL 2.0.4
@@ -10,30 +10,32 @@ Die .hslz Datei mit dem Gira Experte importieren. Das Logikmodul ist dann in der
 
 ## Eingänge
 
-| Eingang | Initwert | Beschreibung |
-| --- | --- | --- |
-| XML | | Kaskadeneingang |
-| SID | | | 
-| Fritzbox IP | | IP der FritzBox |
-| User@Passwort | | User@Passwort des zu verwendenden FritzBox-Nutzers |
-| AIN | | AIN der auszulesenden FritzDECT200 |
-| Ein/Aus | 0 | Ein/Ausschalten der FritzDECT 200 |
-| Timeout SID | 480 | |
-| Intervall [s] | 0 | Bei einem Wert > 0 wird der Status des DECT200-Geräts alle x Sekunden von der Fritzbox abgefragt. |
+| Eingang       | Initwert | Beschreibung                                                                                                                                                                                                    |
+|---------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| XML           |          | Kaskadeneingang (XML-Ausgang eines anderen DECT200 bausteins.<br>So muss nicht jeder Baustein eine Verbindung zur FritzBox aufbauen.<br>Be den Bausteinen in der Kaskade, den Eingang 'Intervall' auf 0 setzen. |
+| SID           |          | Mit der FritzBox ausgehandelte "verschlüsselte" ID. Wird nicht vom Nutzer erzeugt, sondern kann den Bausteinen von einer anderen FritzBox-Baustein zur Verfügung gestellt werden.                               | 
+| Fritzbox IP   |          | IP der FritzBox                                                                                                                                                                                                 |
+| User@Passwort |          | `User@Passwort` des zu verwendenden FritzBox-Nutzers, also Nutzername @ Passwort                                                                                                                                |
+| AIN           |          | AIN der auszulesenden FritzDECT200 im Format '12345 6789123'                                                                                                                                                    |
+| Ein/Aus       | 0        | Ein/Ausschalten der FritzDECT 200                                                                                                                                                                               |
+| Timeout SID   | 480      | Dauer, nach der eine neue SID ausgehandelt werden soll, um einen Timeout seitens der FritzBox zuvor zu kommen.                                                                                                  |
+| Intervall [s] | 0        | Bei einem Wert > 0 wird der Status des DECT200-Geräts alle x Sekunden von der Fritzbox abgefragt.                                                                                                               |
 
 
 
 ## Ausgänge
 Alle Ausgänge sind SBC / Send by Change ausgeführt.
 
-| Ausgang | Initwert | Beschreibung |
-| --- | --- | --- |
-| RM Ein/Aus | 0 |Ein/Aus Status der DECT200 |
-| RM Akt. mW | 0 | Gelesene mW |
-| RM Akt. Zaehlerst. Wh | 0 | Gelesene Wh |
-| RM Akt. Temp. °C | 0 | Gelesene °C, um Offset korrigiert |
-| SID | | Aktuelle SID (Nur beim 1. Baustein einer Kaskade!) |
-| XML | | Empfangene XML Datei zu allen Smart Home Geräten der FritzBox |
+| Ausgang               | Initwert | Beschreibung                                                     |
+|-----------------------|----------|------------------------------------------------------------------|
+ | Name                  |          | Name der Steckdose in der FritzBox-Oberfläche                    |
+ | RM Present            | 0        | 0 = Steckdose ist nicht erreichbar, 1 = Steckdose ist erreichbar |
+| RM Ein/Aus            | 0        | Ein/Aus Status der DECT200                                       |
+| RM Akt. mW            | 0        | Gelesene mW                                                      |
+| RM Akt. Zaehlerst. Wh | 0        | Gelesene Wh                                                      |
+| RM Akt. Temp. °C      | 0        | Gelesene °C, um Offset korrigiert                                |
+| SID                   |          | Aktuelle SID (Nur beim 1. Baustein einer Kaskade!)               |
+| XML                   |          | Empfangene XML Datei zu allen Smart Home Geräten der FritzBox    |
 
 
 ## Sonstiges
@@ -44,26 +46,30 @@ Alle Ausgänge sind SBC / Send by Change ausgeführt.
 
 ### Change Log
 
+- v2.0
+  - Impr.: Ausgabe von Name [#8](https://github.com/En3rGy/11081-Fritz-DECT200/issues/8)
+  - Impr.: Ausgabe Present-Status [#7](https://github.com/En3rGy/11081-Fritz-DECT200/issues/7)
+  - Impr.: Anpassung Debug-Umgebung
 - v1.7
-    - Impr.: [#4](https://github.com/En3rGy/11081-Fritz-DECT200/issues/4) Try-catch für einzelne Datenpunkte, damit im Fehlerfall die anderen noch verarbeitet werden können
+  - Impr.: [#4](https://github.com/En3rGy/11081-Fritz-DECT200/issues/4) Try-catch für einzelne Datenpunkte, damit im Fehlerfall die anderen noch verarbeitet werden können
 - v1.6
-	- Impr.: [#3](https://github.com/En3rGy/11081-Fritz-DECT200/issues/3) Logging mit AIN-Angabe
+  - Impr.: [#3](https://github.com/En3rGy/11081-Fritz-DECT200/issues/3) Logging mit AIN-Angabe
 - v1.4 & v1.5
-    - Fix: [#1](https://github.com/En3rGy/11081-Fritz-DECT200/issues/1) Keine Reaktion auf Intervall-Vorgabe
+  - Fix: [#1](https://github.com/En3rGy/11081-Fritz-DECT200/issues/1) Keine Reaktion auf Intervall-Vorgabe
 - v1.3
-    - Impr.: Exception Handling
-	- Impr.: Impr. logging (msg bei xml abruf)
+  - Impr.: Exception Handling
+  - Impr.: Impr. logging (msg bei xml abruf)
 - v1.2
-	- Fix: Intervall triggert nicht
+  - Fix: Intervall triggert nicht
 - v1.1
-	- Fix: SBC
+  - Fix: SBC
 - v1.0
-    - Impr.: Trigger Eingang in Intervall-Eingang geändert (autom. Abruf)
-	- Impr.: Ausgänge als SBC ausgeführt
+  - Impr.: Trigger Eingang in Intervall-Eingang geändert (autom. Abruf)
+  - Impr.: Ausgänge als SBC ausgeführt
 - v0.19
-    - Impr.: Ausgaben auf Debug-Seite
+  - Impr.: Ausgaben auf Debug-Seite
 - v0.18
-    - Bugfix: XML Daten wurden nicht auf Ausgang "XML" weitergereicht.
+  - Bugfix: XML Daten wurden nicht auf Ausgang "XML" weitergereicht.
 
 ### Open Issues / Known Bugs
 

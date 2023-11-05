@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
     <modules>
-        <module category="Datenaustausch" context="11081_FritzBox_Dect200" id="11081" name="Fritz DECT200 (11081)" version="1.7">
+        <module category="Datenaustausch" context="11081_FritzBox_Dect200" id="11081" name="Fritz DECT200 (11081)" version="2.0">
             <inputs>
                 <input type="string" const_name="sXML" init_value="">XML</input>
 				<input type="string" const_name="sSid" init_value="">SID</input>
@@ -13,6 +13,8 @@
 				<input type="number" const_name="nIntervall" init_value="310">Intervall [s]</input>
             </inputs>
             <outputs>
+                <output type="string" const_name="name" init_value="">Name</output>
+                <output type="number" const_name="present" init_value="0">RM Present (sbc)</output>
 				<output type="number" const_name="bRmOnOff" init_value="0">RM Ein/Aus (sbc)</output>
 				<output type="number" const_name="nMW" init_value="0">RM Akt. mW (sbc)</output>
 				<output type="number" const_name="nZaehlerWh" init_value="0">RM Akt. Zaehlerst. Wh (sbc)</output>

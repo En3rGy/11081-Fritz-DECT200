@@ -29,6 +29,7 @@ import codecs
 import md5
 import threading
 
+
 ##!!!!##################################################################################################
 #### Own written code can be placed above this commentblock . Do not change or delete commentblock! ####
 ########################################################################################################
@@ -48,12 +49,14 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
         self.PIN_I_BONOFF=6
         self.PIN_I_NSIDTIMEOUT=7
         self.PIN_I_NINTERVALL=8
-        self.PIN_O_BRMONOFF=1
-        self.PIN_O_NMW=2
-        self.PIN_O_NZAEHLERWH=3
-        self.PIN_O_NTEMP=4
-        self.PIN_O_SSID=5
-        self.PIN_O_SXML=6
+        self.PIN_O_NAME=1
+        self.PIN_O_PRESENT=2
+        self.PIN_O_BRMONOFF=3
+        self.PIN_O_NMW=4
+        self.PIN_O_NZAEHLERWH=5
+        self.PIN_O_NTEMP=6
+        self.PIN_O_SSID=7
+        self.PIN_O_SXML=8
 
 ########################################################################################################
 #### Own written code can be placed after this commentblock . Do not change or delete commentblock! ####
@@ -137,7 +140,7 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
                 cmd = "setswitchon"
 
             url = str('http://' + ip +
-                       '/webservices/homeautoswitch.lua?ain=' + ain + '&switchcmd=' + cmd + '&sid=' + sid)
+                      '/webservices/homeautoswitch.lua?ain=' + ain + '&switchcmd=' + cmd + '&sid=' + sid)
             resp = urllib.urlopen(url)
             code = resp.getcode()
             data = resp.read()
@@ -170,55 +173,41 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
     def get_dect_200_status(self, xml):
         data = {}
         ain = self._get_input_value(self.PIN_I_SAIN)
-        state = re.findall('<device identifier="' + ain +
-                           '" id=.*?>.*?<state>(.*?)</state>', xml)
+        attributes = ["state", "power", "energy", "celsius", "present", "name"]
 
-        if len(state) == 0:
-            return {}
-        else:
-            state = state[0]
+        for attribute in attributes:
+            try:
+                pattern = '<device identifier="{}".*?>.*?<{}>(.*?)</{}>.*?</device>'.format(ain, attribute, attribute)
+                result = re.search(pattern, xml)
+                if result:
+                    value = result.group(1)
+                    if attribute == "state":
+                        data[attribute] = int(value)
+                        self.set_output_value_sbc(self.PIN_O_BRMONOFF, bool(data[attribute]))
+                    elif attribute == "power":
+                        data[attribute] = int(value)
+                        self.set_output_value_sbc(self.PIN_O_NMW, float(data[attribute]))
+                    elif attribute == "energy":
+                        data[attribute] = int(value)
+                        self.set_output_value_sbc(self.PIN_O_NZAEHLERWH, float(data[attribute]))
+                    elif attribute == "temp":
+                        value = int(value)
+                        offset = re.search('<device identifier="' + ain + '".*?><offset>(.*?)</offset>', xml)
+                        if offset:
+                            value += int(offset.group(1))
+                        data[attribute] = value / 10.0
+                        self.set_output_value_sbc(self.PIN_O_NTEMP, float(data[attribute]))
+                    elif attribute == "present":
+                        data[attribute] = int(value)
+                        self.set_output_value_sbc(self.PIN_O_PRESENT, float(data[attribute]))
+                    elif attribute == "name":
+                        data[attribute] = int(value)
+                        self.set_output_value_sbc(self.PIN_O_NAME, float(data[attribute]))
+            except Exception as e:
+                self.DEBUG.add_message("{}: Error '{}' in attribute '{}' in get_dect_200_status()".format(
+                    self._get_input_value(self.PIN_I_SAIN), e, attribute))
 
-        if state != "":
-            data["state"] = int(state)
-            self.set_output_value_sbc(self.PIN_O_BRMONOFF, bool(data["state"]))
-
-        try:
-            power = re.findall('<device identifier="' + ain +
-                               '" id=.*?>.*?<power>(.*?)</power>', xml)
-            if len(power) > 0:
-                data["power"] = int(power[0])
-                self.set_output_value_sbc(self.PIN_O_NMW, float(data["power"]))
-        except Exception as e:
-            self.DEBUG.add_message(str(self._get_input_value(self.PIN_I_SAIN)) + ": '" + str(power[0]) + "' in power in get_dect_200_status()")
-
-        try:
-            energy = re.findall('<device identifier="' + ain +
-                                '" id=.*?>.*?<energy>(.*?)</energy>', xml)
-            if len(energy) > 0:
-                data["energy"] = int(energy[0])
-                self.set_output_value_sbc(self.PIN_O_NZAEHLERWH, float(data["energy"]))
-        except Exception as e:
-            self.DEBUG.add_message(str(self._get_input_value(self.PIN_I_SAIN)) + ": '" + str(energy[0]) + "' in energy in get_dect_200_status()")
-
-        try:
-            temp = re.findall('<device identifier="' + ain +
-                              '" id=.*?>.*?<celsius>(.*?)</celsius>', xml)
-
-            if len(temp) > 0:
-                temp = int(temp[0])
-                offset = re.findall('<device identifier="' + ain +
-                                    '" id=.*?>.*?<offset>(.*?)</offset>', xml)
-
-                if len(offset) != 0:
-                    temp = temp + int(offset[0])
-
-                data["temp"] = temp / 10.0
-                self.set_output_value_sbc(self.PIN_O_NTEMP, float(data["temp"]))
-
-        except Exception as e:
-            self.DEBUG.add_message(str(self._get_input_value(self.PIN_I_SAIN)) + ": Error converting '" + str(temp[0]) + "' in temp in get_dect_200_status()")
-
-        self.DEBUG.add_message(str(self._get_input_value(self.PIN_I_SAIN)) + ": XML processed successfully")
+        self.DEBUG.add_message("{}: XML processed successfully".format(self._get_input_value(self.PIN_I_SAIN)))
 
         return data
 
@@ -252,7 +241,7 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
             else:
                 if x == 1:
                     self.DEBUG.add_message(self._get_input_value(self.PIN_I_SAIN) + ": Error processing XML, code:" +
-                                       str(xml["code"]))
+                                           str(xml["code"]))
 
         interval = self._get_input_value(self.PIN_I_NINTERVALL)
         if interval > 0:

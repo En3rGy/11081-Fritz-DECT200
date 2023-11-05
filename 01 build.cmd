@@ -5,7 +5,7 @@ set PYTHONPATH=C:\Python27;C:\Python27\Lib
 
 echo ^<head^> > .\release\log11081.html
 echo ^<link rel="stylesheet" href="style.css"^> >> .\release\log11081.html
-echo ^<title^>Logik - Zoe (14106)^</title^> >> .\release\log11081.html
+echo ^<title^>Logik - Fritz DECT200 (11081)^</title^> >> .\release\log11081.html
 echo ^<style^> >> .\release\log11081.html
 echo body { background: none; } >> .\release\log11081.html
 echo ^</style^> >> .\release\log11081.html
