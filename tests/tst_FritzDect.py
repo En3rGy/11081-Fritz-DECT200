@@ -31,6 +31,7 @@ class TestSequenceFunctions(unittest.TestCase):
         self.tst.debug_input_value[self.tst.PIN_I_SIP] = self.cred["PIN_I_SIP"]
         self.tst.debug_input_value[self.tst.PIN_I_SAIN] = self.cred["PIN_I_SAIN"]
 
+        print(self.tst.debug_input_value)
 
     def test_sbc(self):
         print("\n### test_sbc")
@@ -51,12 +52,59 @@ class TestSequenceFunctions(unittest.TestCase):
         tst1.set_output_value_sbc(1, 0)
         self.assertTrue(tst1.g_debug_sbc, "d")
 
+    def test_get_sid(self):
+        print("\n### test_get_sid")
+        ret = self.tst.get_sid()
+        self.assertTrue(self.tst._sid)
+        self.assertTrue(ret)
+
+        print("\n- Wrong PW")
+        self.tst.debug_input_value[self.tst.PIN_I_SUSERPW] = "no@pw"
+        ret = self.tst.get_sid()
+        self.assertEqual(self.tst._sid, "0000000000000000")
+        self.assertFalse(ret)
+
+        print("\n- Wrong PW2")
+        self.tst.debug_input_value[self.tst.PIN_I_SUSERPW] = "1"
+        ret = self.tst.get_sid()
+        self.assertEqual(self.tst._sid, "0000000000000000")
+        self.assertFalse(ret)
+
+        print("\n- Wrong IP")
+        self.tst.debug_input_value[self.tst.PIN_I_SIP] = "127.0.0.1"
+        ret = self.tst.get_sid()
+        self.assertEqual(self.tst._sid, "0000000000000000")
+        self.assertFalse(ret)
+
+    def test_get_xml(self):
+        print("\n### test_get_xml")
+
+        print("\n- Get SID")
+        self.tst.get_sid()
+        self.assertTrue(self.tst._sid)
+
+        print("\n- Get XML")
+        ret = self.tst.get_xml(self.tst.debug_input_value[self.tst.PIN_I_SIP], self.tst._sid)
+        self.assertEqual(ret['code'], 200)
+        self.assertTrue(ret['data'])
+
+        print("\n- Wrong IP")
+        ret = self.tst.get_xml("127.0.0.1", self.tst._sid)
+        self.assertEqual(ret['code'], 408)
+        self.assertFalse(ret['data'])
+
+        print("\n- Wrong SID")
+        ret = self.tst.get_xml(self.tst.debug_input_value[self.tst.PIN_I_SIP], "DEADBEEF")
+        self.assertEqual(ret['code'], 403)
+        self.assertFalse(ret['data'])
+
     def test_trigger(self):
         print("\n### test_trigger")
+        self.tst._ain = self.tst.debug_input_value[self.tst.PIN_I_SAIN]
         self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF] = -1
 
         self.tst.trigger()
-        self.assertTrue(self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF] != -1)
+        self.assertNotEqual(self.tst.g_out_sbc[self.tst.PIN_O_BRMONOFF], -1)
 
     def test_extern_xml(self):
         print("\n### test_extern_xml")
@@ -124,8 +172,8 @@ class TestSequenceFunctions(unittest.TestCase):
     def test_sid(self):
         print("\n### test_sid")
         self.tst.get_sid()
-        self.assertTrue(self.tst.g_ssid)
-        self.assertNotEqual("0000000000000000", self.tst.g_ssid)
+        self.assertTrue(self.tst._sid)
+        self.assertNotEqual("0000000000000000", self.tst._sid)
 
     def test_switch(self):
         print("\n### test_switch")
