@@ -103,8 +103,7 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
         challenge_resp = ("{}-{}".format(challenge, hashlib.md5(challenge_resp).hexdigest().lower()))
 
         data = {"response": challenge_resp, "username": user}
-        response = urllib.urlopen('http://' + ip + '/login_sid.lua',
-                                  urllib.urlencode(data))
+        response = urllib.urlopen('http://{}/login_sid.lua'.format(ip), urllib.urlencode(data))
         sid = response.read()
         sid = re.findall('<SID>(.*?)</SID>', sid)
 
@@ -143,24 +142,28 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
                     sid = self._sid
 
             # Dect200 #1 on/off
-            cmd = 'setswitchoff'
             if bool(on_off) is True:
                 cmd = "setswitchon"
+            else:
+                cmd = 'setswitchoff'
 
-            url = str('http://' + ip +
-                      '/webservices/homeautoswitch.lua?ain=' + ain + '&switchcmd=' + cmd + '&sid=' + sid)
+            url = 'http://{}/webservices/homeautoswitch.lua'.format(ip)
+            data = {"ain": ain, "switchcmd": cmd, "sid": sid}
+            param = urllib.urlencode(data).replace("+", "")
+            url = "{}?{}".format(url, param)
+            print(url)
             resp = urllib.urlopen(url)
             code = resp.getcode()
             if code == 200:
                 self.DEBUG.add_message(self._ain + ": Switch set successfully.")
                 return True
-
             elif code == 403:
-                print("1st try failed in set_dect_200 with 403")
+                print("Try #" + str(x+1) + " failed in set_dect_200 with 403")
                 sid = self.init_sid
+            else:
+                print("Try #" + str(x+1) + " failed in set_dect_200 with " + str(code))
 
         self.DEBUG.add_message(self._ain + ": Error setting switch, code:" + str(code))
-
         return False
 
     def get_xml(self, ip, sid):
@@ -175,7 +178,7 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
             self.DEBUG.add_exception("{}: Error XML result: {}".format(self._ain, e))
             return {"code": 408, "data": ""}
 
-    def get_dect_200_status(self, xml):
+    def process_xml(self, xml):
         """
 
         :param xml: XML string of FritzBox devices.
@@ -185,39 +188,37 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
         data = {}
         attributes = ["state", "power", "energy", "celsius", "present", "name"]
 
+        ain_xml = re.search('<device identifier="{}".*?>(.*?)</device>'.format(self._ain), xml).group(0)
+        if not ain_xml:
+            self.DEBUG.add_message("{}: AIN not found in XML reply".format(self._ain))
+            return {}
+
         for attribute in attributes:
             try:
-                pattern = '<device identifier="{}".*?>.*?<{}>(.*?)</{}>.*?</device>'.format(self._ain,
-                                                                                            attribute,
-                                                                                            attribute)
-                result = re.search(pattern, xml)
-                if not result:
-                    self.DEBUG.add_message("{}: AIN not found in XML reply".format(self._ain))
-                    return {}
-                else:
-                    value = result.group(1)
-                    if attribute == "state":
-                        data[attribute] = int(value)
-                        self.set_output_value_sbc(self.PIN_O_BRMONOFF, bool(data[attribute]))
-                    elif attribute == "power":
-                        data[attribute] = int(value)
-                        self.set_output_value_sbc(self.PIN_O_NMW, float(data[attribute]))
-                    elif attribute == "energy":
-                        data[attribute] = int(value)
-                        self.set_output_value_sbc(self.PIN_O_NZAEHLERWH, float(data[attribute]))
-                    elif attribute == "temp":
-                        value = int(value)
-                        offset = re.search('<device identifier="' + self._ain + '".*?><offset>(.*?)</offset>', xml)
-                        if offset:
-                            value += int(offset.group(1))
-                        data[attribute] = value / 10.0
-                        self.set_output_value_sbc(self.PIN_O_NTEMP, float(data[attribute]))
-                    elif attribute == "present":
-                        data[attribute] = int(value)
-                        self.set_output_value_sbc(self.PIN_O_PRESENT, float(data[attribute]))
-                    elif attribute == "name":
-                        data[attribute] = int(value)
-                        self.set_output_value_sbc(self.PIN_O_NAME, float(data[attribute]))
+                value = re.search('<{}>(.*?)</{}>'.format(attribute, attribute), ain_xml).group(1)
+
+                if attribute == "state":
+                    data[attribute] = int(value)
+                    self.set_output_value_sbc(self.PIN_O_BRMONOFF, bool(data[attribute]))
+                elif attribute == "power":
+                    data[attribute] = float(value)
+                    self.set_output_value_sbc(self.PIN_O_NMW, float(data[attribute]))
+                elif attribute == "energy":
+                    data[attribute] = int(value)
+                    self.set_output_value_sbc(self.PIN_O_NZAEHLERWH, float(data[attribute]))
+                elif attribute == "celsius":
+                    value = int(value)
+                    offset = re.search('<device identifier="' + self._ain + '".*?><offset>(.*?)</offset>', xml)
+                    if offset:
+                        value += int(offset.group(1))
+                    data[attribute] = value / 10.0
+                    self.set_output_value_sbc(self.PIN_O_NTEMP, float(data[attribute]))
+                elif attribute == "present":
+                    data[attribute] = int(value)
+                    self.set_output_value_sbc(self.PIN_O_PRESENT, float(data[attribute]))
+                elif attribute == "name":
+                    data[attribute] = str(value)
+                    self.set_output_value_sbc(self.PIN_O_NAME, data[attribute])
             except Exception as e:
                 self.DEBUG.add_message("{}: Error '{}' in attribute '{}' in get_dect_200_status()".format(
                     self._ain, e, attribute))
@@ -246,7 +247,7 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
 
             if xml["code"] == 200:
                 # Evaluate XML data
-                self.get_dect_200_status(xml["data"])
+                self.process_xml(xml["data"])
                 self.set_output_value_sbc(self.PIN_O_SXML, xml["data"])
                 self.DEBUG.add_message(self._ain + ": XML received")
                 break
@@ -274,31 +275,22 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
             self.trigger()
 
     def on_input_value(self, index, value):
-
         self._ain = str(self._get_input_value(self.PIN_I_SAIN))  # convert from unicode
-
         if index == self.PIN_I_SSID:
             self._sid = value
-
         elif index == self.PIN_I_NINTERVALL and (value > 0):
             self.trigger()
-
         # Switch device on or off and report back new status
         elif index == self.PIN_I_BONOFF:
-
-            res = self.set_dect_200(self._get_input_value(self.PIN_I_BONOFF),
-                                    self._get_input_value(self.PIN_I_SIP),
-                                    self._ain,
-                                    self._sid)
-
+            res = self.set_dect_200(value, self._get_input_value(self.PIN_I_SIP), self._ain, self._sid)
             if res:
-                self.set_output_value_sbc(self.PIN_O_BRMONOFF, self._get_input_value(self.PIN_I_BONOFF))
+                self.set_output_value_sbc(self.PIN_O_BRMONOFF, value)
 
         # If new XML available or trigger arrived,
         # get and process new status data
         elif index == self.PIN_I_SXML and value:
             # Evaluate XML data
-            self.get_dect_200_status(value)
+            self.process_xml(value)
             self._set_output_value(self.PIN_O_SXML, value)
 
 

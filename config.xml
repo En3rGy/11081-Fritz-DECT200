@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
     <modules>
-        <module category="Datenaustausch" context="11081_FritzBox_Dect200" id="11081" name="Fritz DECT200 (11081)" version="2.0">
+        <module category="Datenaustausch" context="11081_FritzBox_Dect200" id="11081" name="Fritz DECT200 (11081)" version="2.1">
             <inputs>
                 <input type="string" const_name="sXML" init_value="">XML</input>
 				<input type="string" const_name="sSid" init_value="">SID</input>

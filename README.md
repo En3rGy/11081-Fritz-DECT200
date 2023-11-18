@@ -46,6 +46,10 @@ Alle Ausgänge sind SBC / Send by Change ausgeführt.
 
 ### Change Log
 
+- V2.1
+  - Bug: Fixed output of name
+  - Bug: Fixed output of temperature
+  - Bug: Fixed missing output after set switch
 - v2.0
   - Impr.: Ausgabe von Name [#8](https://github.com/En3rGy/11081-Fritz-DECT200/issues/8)
   - Impr.: Ausgabe Present-Status [#7](https://github.com/En3rGy/11081-Fritz-DECT200/issues/7)
