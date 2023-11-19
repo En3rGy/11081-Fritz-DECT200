@@ -46,6 +46,8 @@ Alle Ausgänge sind SBC / Send by Change ausgeführt.
 
 ### Change Log
 
+- V2.2:
+  - Bug: Fixed no ain during init
 - V2.1
   - Bug: Fixed output of name
   - Bug: Fixed output of temperature

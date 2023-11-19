@@ -32,6 +32,11 @@ class TestSequenceFunctions(unittest.TestCase):
 
         print(self.tst.debug_input_value)
 
+    def test_on_init(self):
+        print("\n### test_on_init")
+        self.tst.debug_input_value[self.tst.PIN_I_NINTERVALL] = 120
+        self.tst.on_init()
+
     def test_sbc(self):
         print("\n### test_sbc")
         tst1 = FritzDECT200_11081_11081(1)

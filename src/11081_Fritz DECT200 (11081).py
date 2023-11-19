@@ -40,27 +40,27 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
     def __init__(self, homeserver_context):
         hsl20_4.BaseModule.__init__(self, homeserver_context, "11081_FritzBox_Dect200")
         self.FRAMEWORK = self._get_framework()
-        self.LOGGER = self._get_logger(hsl20_4.LOGGING_NONE, ())
-        self.PIN_I_SXML = 1
-        self.PIN_I_SSID = 2
-        self.PIN_I_SIP = 3
-        self.PIN_I_SUSERPW = 4
-        self.PIN_I_SAIN = 5
-        self.PIN_I_BONOFF = 6
-        self.PIN_I_NSIDTIMEOUT = 7
-        self.PIN_I_NINTERVALL = 8
-        self.PIN_O_NAME = 1
-        self.PIN_O_PRESENT = 2
-        self.PIN_O_BRMONOFF = 3
-        self.PIN_O_NMW = 4
-        self.PIN_O_NZAEHLERWH = 5
-        self.PIN_O_NTEMP = 6
-        self.PIN_O_SSID = 7
-        self.PIN_O_SXML = 8
+        self.LOGGER = self._get_logger(hsl20_4.LOGGING_NONE,())
+        self.PIN_I_SXML=1
+        self.PIN_I_SSID=2
+        self.PIN_I_SIP=3
+        self.PIN_I_SUSERPW=4
+        self.PIN_I_SAIN=5
+        self.PIN_I_BONOFF=6
+        self.PIN_I_NSIDTIMEOUT=7
+        self.PIN_I_NINTERVALL=8
+        self.PIN_O_NAME=1
+        self.PIN_O_PRESENT=2
+        self.PIN_O_BRMONOFF=3
+        self.PIN_O_NMW=4
+        self.PIN_O_NZAEHLERWH=5
+        self.PIN_O_NTEMP=6
+        self.PIN_O_SSID=7
+        self.PIN_O_SXML=8
 
-    ########################################################################################################
-    #### Own written code can be placed after this commentblock . Do not change or delete commentblock! ####
-    ###################################################################################################!!!##
+########################################################################################################
+#### Own written code can be placed after this commentblock . Do not change or delete commentblock! ####
+###################################################################################################!!!##
 
         self.g_out_sbc = {}
         self._sid = ""
@@ -269,6 +269,7 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
         self.g_out_sbc = {}
         self._sid = self.init_sid
         self.g_debug_sbc = False
+        self._ain = str(self._get_input_value(self.PIN_I_SAIN))  # convert from unicode
 
         interval = self._get_input_value(self.PIN_I_NINTERVALL)
         if interval > 0:
