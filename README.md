@@ -10,32 +10,32 @@ Die .hslz Datei mit dem Gira Experte importieren. Das Logikmodul ist dann in der
 
 ## Eingänge
 
-| Eingang       | Initwert | Beschreibung                                                                                                                                                                                                    |
-|---------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| XML           |          | Kaskadeneingang (XML-Ausgang eines anderen DECT200 bausteins.<br>So muss nicht jeder Baustein eine Verbindung zur FritzBox aufbauen.<br>Be den Bausteinen in der Kaskade, den Eingang 'Intervall' auf 0 setzen. |
-| SID           |          | Mit der FritzBox ausgehandelte "verschlüsselte" ID. Wird nicht vom Nutzer erzeugt, sondern kann den Bausteinen von einer anderen FritzBox-Baustein zur Verfügung gestellt werden.                               | 
-| Fritzbox IP   |          | IP der FritzBox                                                                                                                                                                                                 |
-| User@Passwort |          | `User@Passwort` des zu verwendenden FritzBox-Nutzers, also Nutzername @ Passwort                                                                                                                                |
-| AIN           |          | AIN der auszulesenden FritzDECT200 im Format '12345 6789123'                                                                                                                                                    |
-| Ein/Aus       | 0        | Ein/Ausschalten der FritzDECT 200                                                                                                                                                                               |
-| Timeout SID   | 480      | Dauer, nach der eine neue SID ausgehandelt werden soll, um einen Timeout seitens der FritzBox zuvor zu kommen.                                                                                                  |
-| Intervall [s] | 0        | Bei einem Wert > 0 wird der Status des DECT200-Geräts alle x Sekunden von der Fritzbox abgefragt.                                                                                                               |
+| Eingang       | Initwert | Beschreibung                                                                                                   |
+|---------------|----------|----------------------------------------------------------------------------------------------------------------|
+| Auth. Data    |          | Mit der FritzBox ausgehandelten Authentifizierungsdaten von einem andern DECT200-Modul.                        | 
+| Fritzbox IP   |          | IP der FritzBox                                                                                                |
+| User          |          | `User` des zu verwendenden FritzBox-Nutzers                                                                    |
+| Passwort      |          | `Passwort` des zu verwendenden FritzBox-Nutzers                                                                |
+| AIN           |          | AIN der auszulesenden FritzDECT200 im Format '12345 6789123'                                                   |
+| Ein/Aus       | 0        | Ein/Ausschalten der FritzDECT 200                                                                              |
+| Timeout SID   | 480      | Dauer, nach der eine neue SID ausgehandelt werden soll, um einen Timeout seitens der FritzBox zuvor zu kommen. |
+| Intervall [s] | 0        | Bei einem Wert > 0 wird der Status des DECT200-Geräts alle x Sekunden von der Fritzbox abgefragt.              |
 
 
 
 ## Ausgänge
 Alle Ausgänge sind SBC / Send by Change ausgeführt.
 
-| Ausgang               | Initwert | Beschreibung                                                     |
-|-----------------------|----------|------------------------------------------------------------------|
- | Name                  |          | Name der Steckdose in der FritzBox-Oberfläche                    |
- | RM Present            | 0        | 0 = Steckdose ist nicht erreichbar, 1 = Steckdose ist erreichbar |
-| RM Ein/Aus            | 0        | Ein/Aus Status der DECT200                                       |
-| RM Akt. mW            | 0        | Gelesene mW                                                      |
-| RM Akt. Zaehlerst. Wh | 0        | Gelesene Wh                                                      |
-| RM Akt. Temp. °C      | 0        | Gelesene °C, um Offset korrigiert                                |
-| SID                   |          | Aktuelle SID (Nur beim 1. Baustein einer Kaskade!)               |
-| XML                   |          | Empfangene XML Datei zu allen Smart Home Geräten der FritzBox    |
+| Ausgang               | Initwert | Beschreibung                                                                                         |
+|-----------------------|----------|------------------------------------------------------------------------------------------------------|
+ | Name                  |          | Name der Steckdose in der FritzBox-Oberfläche                                                        |
+ | RM Present            | 0        | 0 = Steckdose ist nicht erreichbar, 1 = Steckdose ist erreichbar                                     |
+| RM Ein/Aus            | 0        | Ein/Aus Status der DECT200                                                                           |
+| RM Akt. mW            | 0        | Gelesene mW                                                                                          |
+| RM Akt. Zaehlerst. Wh | 0        | Gelesene Wh                                                                                          |
+| RM Akt. Temp. °C      | 0        | Gelesene °C, um Offset korrigiert                                                                    |
+| Auth. Data            |          | Mit der FritzBox ausgehandelten Authentifizierungsdaten zur Weitergabe an ein anderes DECT200-Modul. |
+
 
 
 ## Sonstiges
