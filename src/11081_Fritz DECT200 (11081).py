@@ -398,12 +398,11 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
                         self.auth = ""
                         self.nonce = ""
                     if x == 1:
-                        error_code = do_regex('<errorCode>(.*?)<\\/errorCode>', response_data)
-                        error_descr = do_regex('<errorDescription>(.*?)<\\/errorDescription>', response_data)
+                        error_code = do_regex('<errorCode>(.*?)</errorCode>', response_data)
+                        error_descr = do_regex('<errorDescription>(.*?)</errorDescription>', response_data)
                         self.log_msg("set_soap_action | "
-                                     "{}. Error code '{}' "
-                                     "and '{}'. Aborting after 2nd try. "
-                                     "Check authentication data".format(error_descr, response_data, error_code))
+                                     "{}. Error code {}. Aborting after 2nd try. "
+                                     "Check authentication data".format(error_descr, error_code))
 
             except urllib2.HTTPError as e:
                 response_data = e.read()
