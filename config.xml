@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
     <modules>
-        <module category="Datenaustausch" context="11081_FritzBox_Dect200" id="11081" name="Fritz DECT200 (11081)" version="2.2">
+        <module category="Datenaustausch" context="11081_FritzBox_Dect200" id="11081" name="Fritz DECT200 (11081)" version="3.2">
             <inputs>
 				<input type="string" const_name="auth_data" init_value="">Auth. Data</input>
                 <input type="string" const_name="sIp" init_value="">Fritzbox IP</input>				
@@ -9,8 +9,7 @@
                 <input type="string" const_name="pw" init_value="">Passwort</input>
 				<input type="string" const_name="sAin" init_value="">AIN</input>
                 <input type="number" const_name="bOnOff" init_value="0">Ein/Aus</input>
-                <input type="number" const_name="nSidTimeout" init_value="480">Timeout SID</input>
-				<input type="number" const_name="nIntervall" init_value="310">Intervall [s]</input>
+				<input type="number" const_name="nIntervall" init_value="310">Abfrageintervall [s]</input>
             </inputs>
             <outputs>
                 <output type="string" const_name="name" init_value="">Name</output>

@@ -1,5 +1,5 @@
 # coding: UTF-8
-
+import time
 import unittest
 import json
 
@@ -65,6 +65,32 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertFalse(tst1.g_debug_sbc, "c")
         tst1.set_output_value_sbc(1, 0)
         self.assertTrue(tst1.g_debug_sbc, "d")
+
+    def test_interval(self):
+        print("\n### test_interval")
+        interval = 5
+        self.tst.debug_input_value[self.tst.PIN_I_NINTERVALL] = interval
+        self.tst.on_input_value(self.tst.PIN_I_NINTERVALL, interval)
+        self.tst.debug_output_value = {}
+        self.tst.g_out_sbc = {}
+
+        print("** Sleeping 3s")
+        time.sleep(3)
+        self.assertFalse(self.tst.PIN_O_NAME in self.tst.debug_output_value)
+
+        print("** Sleeping 5s")
+        time.sleep(5)
+        self.assertTrue(self.tst.debug_output_value[self.tst.PIN_O_NAME])
+        self.tst.debug_input_value[self.tst.PIN_I_NINTERVALL] = 0
+        self.tst.on_input_value(self.tst.PIN_I_NINTERVALL, 0)
+
+    def test_get_new_auth_data(self):
+        print("\n### test_get_new_auth_data")
+        self.tst.nonce = self.tst.realm = self.tst.auth = "False Data"
+        self.tst.update_status()
+        self.assertTrue(self.tst.nonce != self.tst.realm)
+        self.assertTrue(self.tst.auth != self.tst.realm)
+        self.assertTrue(self.tst.nonce != self.tst.auth)
 
 
 if __name__ == '__main__':

@@ -46,36 +46,7 @@ Alle Ausgänge sind SBC / Send by Change ausgeführt.
 
 ### Change Log
 
-- V2.2:
-  - Bug: Fixed no ain during init
-- V2.1
-  - Bug: Fixed output of name
-  - Bug: Fixed output of temperature
-  - Bug: Fixed missing output after set switch
-- v2.0
-  - Impr.: Ausgabe von Name [#8](https://github.com/En3rGy/11081-Fritz-DECT200/issues/8)
-  - Impr.: Ausgabe Present-Status [#7](https://github.com/En3rGy/11081-Fritz-DECT200/issues/7)
-  - Impr.: Anpassung Debug-Umgebung
-- v1.7
-  - Impr.: [#4](https://github.com/En3rGy/11081-Fritz-DECT200/issues/4) Try-catch für einzelne Datenpunkte, damit im Fehlerfall die anderen noch verarbeitet werden können
-- v1.6
-  - Impr.: [#3](https://github.com/En3rGy/11081-Fritz-DECT200/issues/3) Logging mit AIN-Angabe
-- v1.4 & v1.5
-  - Fix: [#1](https://github.com/En3rGy/11081-Fritz-DECT200/issues/1) Keine Reaktion auf Intervall-Vorgabe
-- v1.3
-  - Impr.: Exception Handling
-  - Impr.: Impr. logging (msg bei xml abruf)
-- v1.2
-  - Fix: Intervall triggert nicht
-- v1.1
-  - Fix: SBC
-- v1.0
-  - Impr.: Trigger Eingang in Intervall-Eingang geändert (autom. Abruf)
-  - Impr.: Ausgänge als SBC ausgeführt
-- v0.19
-  - Impr.: Ausgaben auf Debug-Seite
-- v0.18
-  - Bugfix: XML Daten wurden nicht auf Ausgang "XML" weitergereicht.
+Check the [change log](https://github.com/En3rGy/11081-Fritz-DECT200/releases) at github.
 
 ### Open Issues / Known Bugs
 
