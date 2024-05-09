@@ -2,7 +2,7 @@
 
 # coding: UTF-8
 
-# Copyright 2021 T. Paul</p>
+# Copyright 2024 T. Paul</p>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy 
 # of this software and associated documentation files (the "Software"), to deal 
@@ -34,12 +34,15 @@ import json
 
 
 def do_regex(match_str, text):
-    match = re.findall(match_str, text, flags=re.S)
+    if match_str == str() or text == str():
+        raise Exception("do_regex | Match string is {}, data is {}. At least one is empty.".format(match_str, text))
 
-    if len(match) == 0:
-        return ""
+    match = re.search(match_str, text, re.MULTILINE)
 
-    return match[0]
+    if match is None:
+        return str()
+
+    return match.group(1)
 
 
 def interface_addresses(family=socket.AF_INET):
@@ -90,11 +93,13 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
         self.realm = ""  # type: str
         self.auth = ""  # type: str
         self.time_out = 3  # type: int
+        self.recursion_cnt = 0
+        self.debug = False
 
     def set_output_value_sbc(self, pin, val):
         if pin in self.g_out_sbc:
             if self.g_out_sbc[pin] == val:
-                print ("# SBC: " + str(val) + " @ pin " + str(pin) + ", data not send!")
+                if self.debug: print ("# SBC: " + str(val) + " @ pin " + str(pin) + ", data not send!")
                 self.g_debug_sbc = True
                 return
 
@@ -187,7 +192,7 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
 
                 # (scheme='http', netloc='192.168.178.1:49000', path='/tr64desc.xml', params='', query='', fragment='')
                 if url_parsed.netloc:
-                    print("Found FritzBox at {}".format(url_parsed.netloc))
+                    if self.debug: print("DEBUG | discover_fb | Found FritzBox at {}".format(url_parsed.netloc))
                     sock.close()
                     return url_parsed
 
@@ -258,18 +263,16 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
 
         if not self.url_parsed:
             self.url_parsed = self.discover_fb()
-            self.log_data("Fritz!Box URL", self.url_parsed.geturl())
-
-        if not self.url_parsed:
-            self.log_msg("inti_com | Could not discover Fritz!Box. Check network.")
-            return False
+            if not self.url_parsed:
+                raise Exception("inti_com | Could not discover Fritz!Box. Check network.")
+            else:
+                if self.debug: print("DEBUG | init_com | Fritz!Box URL: {}".format(self.url_parsed.geturl()))
 
         self.fb_ip = self.url_parsed.geturl()
 
         self.service_descr = self.get_data(self.url_parsed.geturl())
         if not self.service_descr:
-            self.log_msg("init_com | Could not retrieve service description. Check if Dect200 is connected.")
-            return False
+            raise Exception("init_com | Could not retrieve service description. Check if Dect200 is connected.")
 
         self.url_parsed = urlparse.urlparse(self.url_parsed.scheme + "://" + self.url_parsed.netloc)
         self.fb_ip = self.url_parsed.geturl()
@@ -279,16 +282,14 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
 
         # get security port
         data = self.set_soap_action(self.url_parsed, service_data, "GetSecurityPort", {})
+        if "NewSecurityPort" not in data:
+            raise Exception("init_com | Awaiting security port info but is not available.")
+        sec_port = data["NewSecurityPort"]
 
-        if 'NewSecurityPort' not in data:
-            self.log_msg("Could retrieve security port from Fritz!Box. Create a bug report. "
-                         "The protocol might have changed.")
-        else:
-            sec_port = data['NewSecurityPort']
-            url = 'https://' + self.url_parsed.hostname + ":" + sec_port
-            self.url_parsed = urlparse.urlparse(url)
-            self.fb_ip = self.url_parsed.geturl()
-            self.log_data("Fritz!Box URL", self.url_parsed.geturl())
+        url = 'https://{}:{}'.format(self.url_parsed.hostname, sec_port)
+        self.url_parsed = urlparse.urlparse(url)
+        self.fb_ip = self.url_parsed.geturl()
+        self.log_data("Fritz!Box URL", self.url_parsed.geturl())
 
         urn = "urn:dslforum-org:service:X_AVM-DE_Homeauto:1"
         self._service_data = self.get_service_data(self.service_descr, urn)
@@ -320,9 +321,8 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
     # @attr p_sFormerResp Response from a previous request
     def get_soap_req(self, url_parsed, service_data, action, attr_list):
         if not "controlURL" in service_data or not "serviceType" in service_data:
-            self.log_msg("get_soap_req | Expecting 'controlURL' and 'serviceType' in parameter service_data, "
-                         "which is '{}'".format(service_data))
-            return
+            raise Exception("get_soap_req | Expecting 'controlURL' and 'serviceType' in parameter service_data, "
+                                "which is '{}'".format(service_data))
 
         url = (url_parsed.geturl() + service_data["controlURL"])
         url_parsed = urlparse.urlparse(url)
@@ -349,7 +349,7 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
 
     def get_auth_data(self, data):
         if self.nonce and self.realm and self.auth:
-            print("Auth data already existing. Will be deleted if a connection attempt fails.")
+            if self.debug: print("DEBUG | get_auth_data | Auth data already existing. Will be deleted if a connection attempt fails.")
             return False
 
         self.nonce = do_regex("<Nonce>(.*?)<\\/Nonce>", data)
@@ -358,8 +358,7 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
         user = str(self._get_input_value(self.PIN_I_USER))
         pw = str(self._get_input_value(self.PIN_I_PW))
         if not user or not pw:
-            self.log_msg("get_auth_data | User or Password not set.")
-            return False
+            raise Exception("get_auth_data | User or Password not set.")
 
         secret = hashlib.md5("{user}:{realm}:{pw}".format(user=user, realm=self.realm, pw=pw))
         response = hashlib.md5(secret.hexdigest() + ":" + self.nonce)
@@ -372,10 +371,21 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
 
         return False
 
+    def authenticate(self):
+        if self.debug: print("DEBUG | re_get_auth_data | Unauthenticated implement fetching auth data!")
+
+        self._service_data = ""
+        self.realm = ""
+        self.auth = ""
+        self.nonce = ""
+
+        self.load_auth_data()
+
     def set_soap_action(self, url_parsed, service_data, action, attr_list):
         # Build a SSL Context to disable certificate verification.
+        if self.debug: print("DEBUG | set_soap_action | action: {}".format(action))
+
         ctx = ssl._create_unverified_context()
-        response_data = ""
 
         for x in range(0, 2):
             request = self.get_soap_req(url_parsed, service_data, action, attr_list)
@@ -386,48 +396,43 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
                 response = urllib2.urlopen(request, timeout=self.time_out, context=ctx)
                 response_data = response.read()
 
-                got_new_auth_data = self.get_auth_data(response_data)
-                auth_stat = do_regex('<Status>(.*?)<\\/Status>', response_data)
-                if auth_stat != "Unauthenticated":
-                    self.log_msg("set_soap_action | '{}'".format(auth_stat))
-                    break
-                else:
-                    if not got_new_auth_data or x == 1:
-                        self._service_data = ""
-                        self.realm = ""
-                        self.auth = ""
-                        self.nonce = ""
-                    if x == 1:
-                        error_code = do_regex('<errorCode>(.*?)</errorCode>', response_data)
-                        error_descr = do_regex('<errorDescription>(.*?)</errorDescription>', response_data)
-                        self.log_msg("set_soap_action | "
-                                     "{}. Error code {}. Aborting after 2nd try. "
-                                     "Check authentication data".format(error_descr, error_code))
+                reply = re.findall("<(.*?)>(.*?)</.*?>", response_data, re.MULTILINE)
+                data = {}
+                for pair in reply:
+                    data[pair[0]] = pair[1]
+
+                if "Status" in data:
+                    auth_status = data["Status"]
+                    if self.debug: print("DEBUG | set_soap_action | auth_status: {}".format(auth_status))
+                    if auth_status == "Unauthenticated":
+                        if self.debug: print("DEBUG | set_soap_action | Authentication try no. {}".format(self.recursion_cnt))
+                        if self.recursion_cnt < 2:
+                            self.realm = str()
+                            self.nonce = str()
+                            self.auth = str()
+                            self.recursion_cnt = self.recursion_cnt + 1
+                            self.get_auth_data(response_data)
+                            data = self.set_soap_action(url_parsed, service_data, action, attr_list)
+                    else:
+                        self.recursion_cnt = 0
+                        if self.debug: print("DEBUG | set_soap_action | data: {}".format(data))
+
+                return data
 
             except urllib2.HTTPError as e:
                 response_data = e.read()
                 error_code = re.findall('<errorCode>(.*?)</errorCode>', response_data, flags=re.S)
                 error_descr = re.findall('<errorDescription>(.*?)</errorDescription>', response_data, flags=re.S)
-                self.log_msg("Error:         \t" + error_descr[0] + " (" + error_code[0] + ")" +
-                             "\nservice_data:\t" + json.dumps(service_data) +
-                             "\naction:      \t" + action +
-                             "\nattr_list:   \t" + json.dumps(attr_list))
-
-        dic = {}
-        response_data = do_regex('<u:{}Response.*?>(?:\\n|)(.*?)(?:\\n|)<\\/u:{}Response>'.format(action, action),
-                                 response_data)
-        # if response data is available; e.g. if a set command has been send, no return value is provided
-        if response_data:
-            response_data = re.findall('(<.*?<\\/.*?>)', response_data, flags=re.S)
-            for i in range(0, len(response_data)):
-                key = do_regex('<(.*?)>', response_data[i])
-                val = do_regex('>(.*?)<', response_data[i])
-                dic.update({key: val})
-        return dic
+                raise Exception("set_soap_action | Error:         \t" + error_descr[0] + " (" + error_code[0] + ")" +
+                                    "\nservice_data:\t" + json.dumps(service_data) +
+                                    "\naction:      \t" + action +
+                                    "\nattr_list:   \t" + json.dumps(attr_list))
 
     def get_info(self):
         attr_list = {"NewAIN": self._ain}
         data = self.set_soap_action(self.url_parsed, self._service_data, "GetSpecificDeviceInfos", attr_list)
+
+        if self.debug: print("DEBUG | get_info | data: {}".format(data))
 
         attr = [self.PIN_O_NAME,
                 self.PIN_O_PRESENT,
@@ -453,7 +458,7 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
                 elif pin is self.PIN_O_NZAEHLERWH:
                     self.set_output_value_sbc(self.PIN_O_NZAEHLERWH, float(data["NewMultimeterEnergy"]))
             except Exception as e:
-                print(e)
+                raise Exception("get_info | {}".format(e))
 
     def set_switch(self, state):
         sw_state = "ON" if state else "OFF"
@@ -461,15 +466,18 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
         attr_list = {"NewAIN": self._ain, "NewSwitchState": sw_state}
         ret = self.set_soap_action(self.url_parsed, self._service_data, "SetSwitch", attr_list)
 
-        if ret == {}:
+        if 'u:SetSwitchResponse xmlns:u="urn:dslforum-org:service:X_AVM-DE_Homeauto:1"' in ret:
             self.set_output_value_sbc(self.PIN_O_BRMONOFF, state)
 
     def update_status(self):
-        if not self.init_com():
-            self.log_msg("update_status | Init_com failed.")
-            return
-
-        self.get_info()
+        try:
+            self.init_com()
+        except Exception as e:
+            self.log_msg("Exception in init_com caught in update_status: {}".format(e))
+        try:
+            self.get_info()
+        except Exception as e:
+            self.log_msg("Exception in get_info caught in update_status: {}".format(e))
 
         interval = self._get_input_value(self.PIN_I_NINTERVALL)
         if interval > 0:
@@ -480,28 +488,36 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
         if auth_data_s:
             try:
                 auth_data = json.loads(auth_data_s)
+                if "fb" not in auth_data_s:
+                    if self.debug: print("DEBUG | load_auth_data | PIN_I_AUTH_DATA not valid, will authenticate on myself")
+                    return
                 self.url_parsed = urlparse.urlparse(auth_data["fb"])
                 self.nonce = auth_data["nonce"]
                 self.realm = auth_data["realm"]
                 self.auth = auth_data["auth"]
             except Exception as e:
-                print("load_auth_data | '{}' with auth_data_s '{}'".format(e, auth_data_s))
+                if self.debug: print("DEBUG | load_auth_data | PIN_I_AUTH_DATA not valid, will authenticate on myself")
 
     def on_init(self):
         self.DEBUG = self.FRAMEWORK.create_debug_section()
         self.g_out_sbc = {}
         self.g_debug_sbc = False
         self._ain = str(self._get_input_value(self.PIN_I_SAIN))  # convert from unicode
-        self.load_auth_data()
-        self.update_status()
+        try:
+            self.load_auth_data()
+            self.update_status()
+        except Exception as e:
+            self.log_msg("Exception in on_init: {}".format(e))
 
     def on_input_value(self, index, value):
-
-        if index == self.PIN_I_NINTERVALL and (value > 0):
-            self.update_status()
-        elif index == self.PIN_I_BONOFF:
-            self.set_switch(value)
-        elif index == self.PIN_I_AUTH_DATA and value:
-            self.load_auth_data()
-        elif index == self.PIN_I_SAIN and value:
-            self._ain = str(self._get_input_value(self.PIN_I_SAIN))  # convert from unicode
+        try:
+            if index == self.PIN_I_NINTERVALL and (value > 0):
+                self.update_status()
+            elif index == self.PIN_I_BONOFF:
+                self.set_switch(value)
+            elif index == self.PIN_I_AUTH_DATA and value:
+                self.load_auth_data()
+            elif index == self.PIN_I_SAIN and value:
+                self._ain = str(self._get_input_value(self.PIN_I_SAIN))  # convert from unicode
+        except Exception as e:
+            self.log_msg("Exception in on_input_value: {}".format(e))

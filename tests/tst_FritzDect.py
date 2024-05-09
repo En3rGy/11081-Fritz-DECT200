@@ -24,6 +24,7 @@ class TestSequenceFunctions(unittest.TestCase):
             self.cred = json.load(f)
 
         self.tst = FritzDECT200_11081_11081(0)
+        self.tst.debug = True
         self.tst.debug_input_value[self.tst.PIN_I_USER] = self.cred["PIN_I_USER"]
         self.tst.debug_input_value[self.tst.PIN_I_PW] = self.cred["PIN_I_PW"]
         self.tst.debug_input_value[self.tst.PIN_I_SIP] = self.cred["PIN_I_SIP"]
@@ -31,21 +32,19 @@ class TestSequenceFunctions(unittest.TestCase):
         self.tst.debug_input_value[self.tst.PIN_I_NINTERVALL] = 0
         self.tst.on_init()
 
-        print(self.tst.debug_input_value)
-
-    def test_get_data_tr064(self):
-        print("\n### test_get_data_tr064")
-        self.assertTrue(self.tst.PIN_O_NAME in self.tst.debug_output_value)
-        self.assertTrue(self.tst.debug_output_value[self.tst.PIN_O_NAME])
-
     def test_set_switch(self):
         print("\n### test_set_switch")
-        self.tst.set_switch(False)
+        self.tst.on_input_value(self.tst.PIN_I_BONOFF, True)
+        self.assertTrue(self.tst.debug_output_value[self.tst.PIN_O_BRMONOFF])
+        time.sleep(3)
+        self.tst.on_input_value(self.tst.PIN_I_BONOFF, False)
+        self.assertFalse(self.tst.debug_output_value[self.tst.PIN_O_BRMONOFF])
 
     def test_on_init(self):
         print("\n### test_on_init")
-        self.tst.debug_input_value[self.tst.PIN_I_NINTERVALL] = 120
-        self.tst.on_init()
+        self.tst.debug_input_value[self.tst.PIN_I_NINTERVALL] = 0
+        self.assertTrue(self.tst.PIN_O_NAME in self.tst.debug_output_value)
+        self.assertTrue(self.tst.debug_output_value[self.tst.PIN_O_NAME])
 
     def test_sbc(self):
         print("\n### test_sbc")

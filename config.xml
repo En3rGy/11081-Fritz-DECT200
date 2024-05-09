@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
     <modules>
-        <module category="Datenaustausch" context="11081_FritzBox_Dect200" id="11081" name="Fritz DECT200 (11081)" version="3.2">
+        <module category="Datenaustausch" context="11081_FritzBox_Dect200" id="11081" name="Fritz DECT200 (11081)" version="3.3">
             <inputs>
 				<input type="string" const_name="auth_data" init_value="">Auth. Data</input>
                 <input type="string" const_name="sIp" init_value="">Fritzbox IP</input>				
