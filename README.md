@@ -12,7 +12,6 @@ Die .hslz Datei mit dem Gira Experte importieren. Das Logikmodul ist dann in der
 
 | Eingang       | Initwert | Beschreibung                                                                                                   |
 |---------------|----------|----------------------------------------------------------------------------------------------------------------|
-| Auth. Data    |          | Mit der FritzBox ausgehandelten Authentifizierungsdaten von einem andern DECT200-Modul.                        | 
 | Fritzbox IP   |          | IP der FritzBox                                                                                                |
 | User          |          | `User` des zu verwendenden FritzBox-Nutzers                                                                    |
 | Passwort      |          | `Passwort` des zu verwendenden FritzBox-Nutzers                                                                |
@@ -28,14 +27,12 @@ Alle Ausgänge sind SBC / Send by Change ausgeführt.
 
 | Ausgang               | Initwert | Beschreibung                                                                                         |
 |-----------------------|----------|------------------------------------------------------------------------------------------------------|
- | Name                  |          | Name der Steckdose in der FritzBox-Oberfläche                                                        |
- | RM Present            | 0        | 0 = Steckdose ist nicht erreichbar, 1 = Steckdose ist erreichbar                                     |
+| Name                  |          | Name der Steckdose in der FritzBox-Oberfläche                                                        |
+| RM Present            | 0        | 0 = Steckdose ist nicht erreichbar, 1 = Steckdose ist erreichbar                                     |
 | RM Ein/Aus            | 0        | Ein/Aus Status der DECT200                                                                           |
 | RM Akt. mW            | 0        | Gelesene mW                                                                                          |
 | RM Akt. Zaehlerst. Wh | 0        | Gelesene Wh                                                                                          |
 | RM Akt. Temp. °C      | 0        | Gelesene °C, um Offset korrigiert                                                                    |
-| Auth. Data            |          | Mit der FritzBox ausgehandelten Authentifizierungsdaten zur Weitergabe an ein anderes DECT200-Modul. |
-
 
 
 ## Sonstiges
@@ -73,16 +70,16 @@ Der Code des Bausteins befindet sich in der hslz Datei oder auf [github](https:/
 -
 
 ## Software Design Description
-
--
+Das Modul nutzt eine [Bibliothek](https://github.com/En3rGy/fritz_lib), um die Kommunikation mit der FritzBox 
+auszulagern. Außerdem wird das durch die Bibliothek instanziierte Objekt als globale Variable gehalten. Ziel ist es, 
+die Verbindungsdaten zur FritzBox zwischen allen Modulen zu teilen, die die Bibliothek nutzten. 
 
 ## Validierung und Verifikation
-
 -
 
 ## Lizenz
 
-Copyright 2021 T. Paul
+Copyright 2024 T. Paul
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

@@ -1,0 +1,24 @@
+Dieser Baustein liest aktuellen Stomverbrauch in mW,</br>
+Zählerstand des DECT200 in Wh und die gemessene Temperatur</br>
+(korrigiert um den eingestellten Offset). Mehrere Bausteine</br>
+können als Kaskade verknüpft werden, so dass nur eine Webabfrage</br>
+nötig wird. Hierzu wird einfach A6 des Vorgängerbausteins mit</br>
+E1 des nachfolgebausteins verknüpft</br>
+</br>
+Changelog</br>
+v0.7</br>
+- Reset SID if switch command fails</br>
+v0.6</br>
+- Added check to request sid if a request failed</br>
+v0.5</br>
+- Reconect nach fehlerhafter SID, z.B. nach Neustart FritzBox</br>
+v0.4</br>
+- Added missing PW/User seperation during EI</br>
+- Replacement of HTML special characters in responses</br>
+v0.3</br>
+- Timout SID hinzugefügt</br>
+v0.2</br>
+- Umgestellt auf XML abfrage mittels getdevicelistinfos</br>
+v0.1</br>
+- Initial</br>
+

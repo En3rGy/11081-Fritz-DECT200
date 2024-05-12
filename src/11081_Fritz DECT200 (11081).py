@@ -74,33 +74,42 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
         attr_list = {"NewAIN": self._ain}
         data = fritz_box.set_soap_action(self.service_name, action, attr_list)
 
-        attr = [self.PIN_O_NAME,
-                self.PIN_O_PRESENT,
-                self.PIN_O_BRMONOFF,
-                self.PIN_O_NMW,
-                self.PIN_O_NTEMP,
-                self.PIN_O_NZAEHLERWH]
+        attr = {self.PIN_O_NAME: "NewDeviceName",
+                self.PIN_O_PRESENT: "NewPresent",
+                self.PIN_O_BRMONOFF: "NewSwitchState",
+                self.PIN_O_NMW: "NewMultimeterPower",
+                self.PIN_O_NTEMP: "NewTemperatureCelsius",
+                self.PIN_O_NZAEHLERWH: "NewMultimeterEnergy" }
 
         for pin in attr:
             try:
+                param = attr[pin]
+                if param not in data:
+                    continue
+
                 if pin is self.PIN_O_NAME:
-                    self.set_output_value_sbc(self.PIN_O_NAME, str(data["NewDeviceName"]))
+                    result = str(data[param])
                 elif pin is self.PIN_O_PRESENT:
-                    self.set_output_value_sbc(self.PIN_O_PRESENT, str(data["NewPresent"]) == "CONNECTED")
+                    result = (str(data[param]).upper() == "CONNECTED")
                 elif pin is self.PIN_O_BRMONOFF:
-                    self.set_output_value_sbc(self.PIN_O_BRMONOFF, str(data["NewSwitchState"]) == "ON")
+                    result = (str(data[param]).upper() == "ON")
                 elif pin is self.PIN_O_NMW:
-                    self.set_output_value_sbc(self.PIN_O_NMW, float(data["NewMultimeterPower"]) * 10.0)
+                    result = float(data[param]) * 10.0
                 elif pin is self.PIN_O_NTEMP:
-                    temp_offset = float(data["NewTemperatureOffset"])
-                    temp = (float(data["NewTemperatureCelsius"]) - temp_offset) / 10.0
-                    self.set_output_value_sbc(self.PIN_O_NTEMP, temp)
+                    if "NewTemperatureOffset" in data:
+                        temp_offset = float(data["NewTemperatureOffset"])
+                    else:
+                        temp_offset = 0.0
+                    result = (float(data["NewTemperatureCelsius"]) - temp_offset) / 10.0
                 elif pin is self.PIN_O_NZAEHLERWH:
-                    self.set_output_value_sbc(self.PIN_O_NZAEHLERWH, float(data["NewMultimeterEnergy"]))
+                    result = float(data[param])
+
+                self.set_output_value_sbc(pin, result)
+
             except Exception as e:
                 raise Exception("get_info | {}".format(e))
 
-        self.log_msg("get_device_status | OK")
+        self.log_msg("get_device_status | Completed.")
 
     def set_switch(self, state):
         """
@@ -133,7 +142,7 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
                 fritz_box.user = str(self._get_input_value(self.PIN_I_USER))
                 fritz_box.password = str(self._get_input_value(self.PIN_I_PW))
                 fritz_box.discover(self.FRAMEWORK.get_homeserver_private_ip())
-                self.log_data("ensure_fritz_box_init | FritzBox", "{}://{}:{}".format(fritz_box.protocol,
+                self.log_data("FritzBox IP", "{}://{}:{}".format(fritz_box.protocol,
                                                                                      fritz_box.ip,
                                                                                      fritz_box.port))
             except Exception as e:
