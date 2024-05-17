@@ -1,83 +1,59 @@
 # Fritz DECT200 (11081)
-Dieser Baustein liest den aktuellen Stromverbrauch in mW, den Zählerstand des DECT200 in Wh und die gemessene Temperatur (korrigiert um den eingestellten Offset). Mehrere Bausteine
-können als Kaskade verknüpft werden, sodass nur eine Webabfrage nötig wird. Hierzu wird einfach A6 des Vorgängerbausteins mit E1 des Nachfolgebausteins verknüpft.
+This module reads the current power consumption in mW, the meter reading of the DECT200 in Wh, and the measured 
+temperature (corrected by the set offset). Multiple modules can be linked in a cascade so that only one web query is 
+required. To do this, simply connect A6 of the predecessor module to E1 of the successor module.
 
-## Voraussetzung
-- HS Firmware 4.11 / HSL 2.0.4
+## Prerequisite
+- HS Firmware 4.12 / HSL 2.0.4
 
 ## Installation
-Die .hslz Datei mit dem Gira Experte importieren. Das Logikmodul ist dann in der Rubrik "Datenaustausch" verfügbar.
+Import the .hslz file with the Gira Expert. The logic module is then available in the "Data Exchange" category.
 
-## Eingänge
+## Inputs
 
-| Eingang       | Initwert | Beschreibung                                                                                                   |
-|---------------|----------|----------------------------------------------------------------------------------------------------------------|
-| Fritzbox IP   |          | IP der FritzBox                                                                                                |
-| User          |          | `User` des zu verwendenden FritzBox-Nutzers                                                                    |
-| Passwort      |          | `Passwort` des zu verwendenden FritzBox-Nutzers                                                                |
-| AIN           |          | AIN der auszulesenden FritzDECT200 im Format '12345 6789123'                                                   |
-| Ein/Aus       | 0        | Ein/Ausschalten der FritzDECT 200                                                                              |
-| Timeout SID   | 480      | Dauer, nach der eine neue SID ausgehandelt werden soll, um einen Timeout seitens der FritzBox zuvor zu kommen. |
-| Intervall [s] | 0        | Bei einem Wert > 0 wird der Status des DECT200-Geräts alle x Sekunden von der Fritzbox abgefragt.              |
+| Input        | Init Value | Description                                                                                         |
+|--------------|------------|-----------------------------------------------------------------------------------------------------|
+| Fritzbox IP  |            | IP of the FritzBox                                                                                  |
+| User         |            | `User` of the FritzBox user to be used                                                              |
+| Password     |            | `Password` of the FritzBox user to be used                                                          |
+| AIN          |            | AIN of the FritzDECT200 to be read in the format '12345 6789123'                                    |
+| On/Off       | 0          | Switching the FritzDECT 200 on/off                                                                  |
+| Interval [s] | 0          | If the value is > 0, the status of the DECT200 device is queried from the Fritzbox every x seconds. |
 
+## Outputs
+All outputs are executed as SBC / Send by Change.
 
-
-## Ausgänge
-Alle Ausgänge sind SBC / Send by Change ausgeführt.
-
-| Ausgang               | Initwert | Beschreibung                                                                                         |
-|-----------------------|----------|------------------------------------------------------------------------------------------------------|
-| Name                  |          | Name der Steckdose in der FritzBox-Oberfläche                                                        |
-| RM Present            | 0        | 0 = Steckdose ist nicht erreichbar, 1 = Steckdose ist erreichbar                                     |
-| RM Ein/Aus            | 0        | Ein/Aus Status der DECT200                                                                           |
-| RM Akt. mW            | 0        | Gelesene mW                                                                                          |
-| RM Akt. Zaehlerst. Wh | 0        | Gelesene Wh                                                                                          |
-| RM Akt. Temp. °C      | 0        | Gelesene °C, um Offset korrigiert                                                                    |
-
-
-## Sonstiges
-
-- Neuberechnung beim Start: Nein
-- Baustein ist remanent: Nein
-- Interne Bezeichnung: 11081
-
-### Change Log
-
-Check the [change log](https://github.com/En3rGy/11081-Fritz-DECT200/releases) at github.
-
-### Open Issues / Known Bugs
-
-- Eingang Timeout SID aktuell ohne Funktion
-
-### Support
-
-Für Fehlermeldungen oder Feature-Wünsche, bitte [github issues](https://github.com/En3rGy/11081-Fritz-DECT200/issues) nutzen.
-Fragen am besten als Thread im [knx-user-forum.de](https://knx-user-forum.de) stellen. Dort finden sich ggf. bereits Diskussionen und Lösungen.
+| Output                   | Init Value | Description                                         |
+|--------------------------|------------|-----------------------------------------------------|
+| Current Consumption [mW] | 0          | Current power consumption of the FritzDECT200 in mW |
+| Meter Reading [Wh]       | 0          | Meter reading of the FritzDECT200 in Wh             |
+| Temperature [°C]         | 0          | Temperature measured by the FritzDECT200 in °C      |
 
 ## Code
 
-Der Code des Bausteins befindet sich in der hslz Datei oder auf [github](https://github.com/En3rGy/11081-Fritz-DECT200).
+The code of the module is located in the hslz file or on [GitHub](https://github.com/En3rGy/11081-Fritz-DECT200).
 
-### Entwicklungsumgebung
+### Development Environment
 
 - [Python 2.7.18](https://www.python.org/download/releases/2.7/)
     - Install python *markdown* module (for generating the documentation) `python -m pip install markdown`
 - Python editor [PyCharm](https://www.jetbrains.com/pycharm/)
 - [Gira Homeserver Interface Information](http://www.hs-help.net/hshelp/gira/other_documentation/Schnittstelleninformationen.zip)
 
-## Anforderungen
+## Requirements
 
 -
 
 ## Software Design Description
-Das Modul nutzt eine [Bibliothek](https://github.com/En3rGy/fritz_lib), um die Kommunikation mit der FritzBox 
-auszulagern. Außerdem wird das durch die Bibliothek instanziierte Objekt als globale Variable gehalten. Ziel ist es, 
-die Verbindungsdaten zur FritzBox zwischen allen Modulen zu teilen, die die Bibliothek nutzten. 
+The module uses a [library](https://github.com/En3rGy/fritz_lib) to outsource communication with the FritzBox. 
+Additionally, the object instantiated by the library is held as a global variable. The goal is to share the connection 
+data to the FritzBox among all modules using the library.
 
-## Validierung und Verifikation
--
+## Validation and Verification
 
-## Lizenz
+Units test are persormed on some functions.
+
+## License
 
 Copyright 2024 T. Paul
 

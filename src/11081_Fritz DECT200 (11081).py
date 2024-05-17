@@ -180,7 +180,7 @@ class FritzDECT200_11081_11081(hsl20_4.BaseModule):
                 self.log_msg("update_status | Exception in 2nd try get_device_status: {}".format(e))
 
         if interval > 0:
-            t = threading.Timer(interval, self.update_status).start()
+            threading.Timer(interval, self.update_status).start()
 
     def on_init(self):
         self.DEBUG = self.FRAMEWORK.create_debug_section()
