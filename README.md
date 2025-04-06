@@ -1,3 +1,4 @@
+[![No Maintenance Intended](http://unmaintained.tech/badge.svg)](http://unmaintained.tech/)
 # Fritz DECT200 (11081)
 This module reads the current power consumption in mW, the meter reading of the DECT200 in Wh, and the measured 
 temperature (corrected by the set offset). Multiple modules can be linked in a cascade so that only one web query is 
